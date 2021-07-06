@@ -12,10 +12,11 @@ Official node for running stakers in Golang.
 
 ### Building the source
 1. Run `npm install` to install the node dependencies.
-2. Run `npm run build` to build the binary. While building the binary, supply the provider RPC url and the gas multiplier.
-3. If you want to build from scratch i.e., by fetching the smart contract bindings as well, run `npm run build-all` instead of `npm run build`. 
-   
+2. If you want to build from scratch i.e., by fetching the smart contract bindings as well, run `npm run build-all`.
+
    _Note: To build from scratch, `geth` and `abigen` must be installed in your system._
+3. If you already have the `pkg/bindings` you can run `npm run build` instead of `npm run build-all` to directly build the binary. 
+4. While building the binary, supply the provider RPC url and the gas multiplier.
 5. The binary will be generated at `build/bin`.
 
 ## Commands
@@ -52,6 +53,30 @@ Example:
 $ ./razor stake --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --amount 1000
 ```
 
+### Set Delegation
+
+If you are a staker you can accept delegation from delegators and charge a commission from them.
+```
+$ ./razor setDelegation --address <address> --status <true_or_false> --commission <commission>
+```
+
+Example:
+```
+$ ./razor setDelegation --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --status true --commission 100
+```
+
+### Delegate
+
+If you want to become a delegator use the `delegate` command. The staker whose `staker_id` is provided, their stake is increased.
+```
+$ ./razor delegate --address <address> --amount <amount> --stakerId <staker_id>
+```
+
+Example:
+```
+$ ./razor stake --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --amount 1000 --stakerId 1
+```
+
 ### Vote
 You can start voting once you've staked some razors
 ```
@@ -66,26 +91,39 @@ $ ./razor vote --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c
 ### Unstake
 If you wish to withdraw your funds, you can run the `unstake` command followed by the `withdraw` command.
 ```
-$ ./razor unstake --address <address>
+$ ./razor unstake --address <address> --stakerId <staker_id>
 ```
 
 Example:
 ```
-$ ./razor unstake --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c
+$ ./razor unstake --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --stakerId 1
 ```
 
 ### Withdraw
 Once `unstake` has been called, you can withdraw your funds using the `withdraw` command
 
 ```
-$ ./razor withdraw --address <address>
+$ ./razor withdraw --address <address> --stakerId <staker_id>
 ```
 
 Example:
 
 ```
-$ ./razor withdraw --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c
+$ ./razor withdraw --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --stakerId 1
 ```
+
+### Reset Lock
+If the withdrawal period is over, then the lock must be reset otherwise the user cannot unstake.
+```
+$ ./razor resetLock --address <address> --stakerId <staker_id>
+```
+
+Example:
+
+```
+$ ./razor resetLock --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --stakerId 1
+```
+
 ### Transfer
 Transfers razor to other accounts.
 
