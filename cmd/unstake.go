@@ -70,7 +70,7 @@ var unstakeCmd = &cobra.Command{
 
 		if autoWithdraw {
 			log.Info("Starting withdrawal now...")
-			s := spinner.New(spinner.CharSets[9], 100 * time.Millisecond)
+			s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
 			s.Start()
 			time.Sleep(time.Duration(core.EpochLength) * time.Second)
 			s.Stop()
@@ -98,8 +98,11 @@ func init() {
 	unstakeCmd.Flags().StringVarP(&AmountToUnStake, "amount", "a", "0", "amount of sRazors to un-stake")
 	unstakeCmd.Flags().BoolVarP(&WithdrawAutomatically, "autoWithdraw", "w", false, "withdraw after un-stake automatically")
 
-	unstakeCmd.MarkFlagRequired("address")
-	unstakeCmd.MarkFlagRequired("stakerId")
-	unstakeCmd.MarkFlagRequired("amount")
+	addrErr := unstakeCmd.MarkFlagRequired("address")
+	utils.CheckError("Address error: ", addrErr)
+	stakerIdErr := unstakeCmd.MarkFlagRequired("stakerId")
+	utils.CheckError("Staker Id error: ", stakerIdErr)
+	amountErr := unstakeCmd.MarkFlagRequired("amount")
+	utils.CheckError("Amount error: ", amountErr)
 
 }
