@@ -1,12 +1,11 @@
 package cmd
 
 import (
+	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"razor/core"
 	"razor/core/types"
 	"razor/utils"
-
-	"github.com/ethereum/go-ethereum/ethclient"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -84,7 +83,7 @@ func checkForCommitStateAndWithdraw(client *ethclient.Client, account types.Acco
 	}
 }
 
-func withdraw(client *ethclient.Client, txnOpts types.TransactionOptions, epoch *big.Int, stakerId *big.Int) {
+func withdraw(client *ethclient.Client, txnOpts types.TransactionOptions, epoch *big.Int, stakerId *big.Int) int {
 	log.Info("Withdrawing funds...")
 
 	stakeManager := utils.GetStakeManager(client)
@@ -94,7 +93,8 @@ func withdraw(client *ethclient.Client, txnOpts types.TransactionOptions, epoch 
 	log.Info("Withdraw Transaction sent.")
 	log.Info("Txn Hash: ", txn.Hash())
 
-	utils.WaitForBlockCompletion(client, txn.Hash().String())
+	withdrawStatus := utils.WaitForBlockCompletion(client, txn.Hash().String())
+	return withdrawStatus
 }
 
 func init() {
@@ -108,8 +108,7 @@ func init() {
 	withdrawCmd.Flags().StringVarP(&Address, "address", "", "", "address of the user")
 	withdrawCmd.Flags().StringVarP(&StakerId, "stakerId", "", "", "staker's id to withdraw")
 
-	addrErr := withdrawCmd.MarkFlagRequired("address")
-	utils.CheckError("Address error: ", addrErr)
-	stakerIdErr := withdrawCmd.MarkFlagRequired("stakerId")
-	utils.CheckError("Staker id error: ", stakerIdErr)
+	withdrawCmd.MarkFlagRequired("address")
+	withdrawCmd.MarkFlagRequired("stakerId")
+
 }

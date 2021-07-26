@@ -1,17 +1,16 @@
 package cmd
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/manifoldco/promptui"
+	log "github.com/sirupsen/logrus"
 	"math/big"
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
 	"razor/utils"
 	"strings"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/manifoldco/promptui"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -62,7 +61,7 @@ to quickly create a Cobra application.`,
 		}
 
 		_commission, ok := new(big.Int).SetString(commission, 10)
-		commissionAmountInWei := big.NewInt(1).Mul(_commission, big.NewInt(1e18))
+		//commissionAmountInWei := big.NewInt(1).Mul(_commission, big.NewInt(1e18))
 		if !ok {
 			log.Fatal("Set string: error")
 		}
@@ -73,29 +72,30 @@ to quickly create a Cobra application.`,
 		if commission != "0" && stakerInfo.AcceptDelegation {
 			// Call SetCommission if the commission value is provided and the staker hasn't already set commission
 			if stakerInfo.Commission.Cmp(big.NewInt(0)) == 0 {
-				SetCommission(client, stakeManager, stakerId, txnOpts, commissionAmountInWei)
+				SetCommission(client, stakeManager, stakerId, txnOpts, _commission)
 			}
 
 			// Call DecreaseCommission if the commission value is provided and the staker has already set commission
-			if stakerInfo.Commission.Cmp(big.NewInt(0)) > 0 && stakerInfo.Commission.Cmp(commissionAmountInWei) > 0 {
-				DecreaseCommission(client, stakeManager, stakerId, txnOpts, commissionAmountInWei)
+			if stakerInfo.Commission.Cmp(big.NewInt(0)) > 0 && stakerInfo.Commission.Cmp(_commission) > 0 {
+				if confirmFromPrompt(stakerId, _commission) {
+					DecreaseCommission(client, stakeManager, stakerId, txnOpts, _commission)
+				}
 			}
 		}
-
 	},
 }
 
-func SetCommission(client *ethclient.Client, stakeManager *bindings.StakeManager, stakerId *big.Int, txnOpts *bind.TransactOpts, commissionAmountInWei *big.Int) {
-	log.Infof("Setting the commission value of Staker %s to %s", stakerId, commissionAmountInWei)
-	commissionTxn, err := stakeManager.SetCommission(txnOpts, commissionAmountInWei)
+func SetCommission(client *ethclient.Client, stakeManager *bindings.StakeManager, stakerId *big.Int, txnOpts *bind.TransactOpts, commission *big.Int) {
+	log.Infof("Setting the commission value of Staker %s to %s", stakerId, commission)
+	commissionTxn, err := stakeManager.SetCommission(txnOpts, commission)
 	utils.CheckError("Error in setting commission: ", err)
 	log.Info("Sending SetCommission transaction...")
 	log.Infof("Transaction hash: %s", commissionTxn.Hash())
 	utils.WaitForBlockCompletion(client, commissionTxn.Hash().String())
 }
 
-func DecreaseCommission(client *ethclient.Client, stakeManager *bindings.StakeManager, stakerId *big.Int, txnOpts *bind.TransactOpts, commissionAmountInWei *big.Int) {
-	log.Infof("Decreasing the commission value of Staker %s to %s", stakerId, commissionAmountInWei)
+func confirmFromPrompt(stakerId *big.Int, commission *big.Int) bool {
+	log.Infof("Decreasing the commission value of Staker %s to %s", stakerId, commission)
 	prompt := promptui.Prompt{
 		Label:     "Decrease Commission? Once decreased, your commission cannot be increased.",
 		IsConfirm: true,
@@ -103,13 +103,36 @@ func DecreaseCommission(client *ethclient.Client, stakeManager *bindings.StakeMa
 	result, err := prompt.Run()
 	utils.CheckError(result, err)
 	if strings.ToLower(result) == "yes" || strings.ToLower(result) == "y" {
-		decreaseCommissionTxn, err := stakeManager.DecreaseCommission(txnOpts, commissionAmountInWei)
-		utils.CheckError("Error in decreasing commission: ", err)
+		return true
+	}
+	return false
+}
+
+func DecreaseCommission(client *ethclient.Client, stakeManager *bindings.StakeManager, stakerId *big.Int, txnOpts *bind.TransactOpts, commission *big.Int) int {
+	//log.Infof("Decreasing the commission value of Staker %s to %s", stakerId, commission)
+	//prompt := promptui.Prompt{
+	//	Label:     "Decrease Commission? Once decreased, your commission cannot be increased.",
+	//	IsConfirm: true,
+	//}
+	//result, err := prompt.Run()
+	//utils.CheckError(result, err)
+	//if strings.ToLower(result) == "yes" || strings.ToLower(result) == "y" {
+	//	decreaseCommissionTxn, err := stakeManager.DecreaseCommission(txnOpts, commission)
+	//	if err != nil {
+	//		utils.CheckError("Error in decreasing commission: ", err)
+	//		return 0
+	//	}
+		decreaseCommissionTxn, err := stakeManager.DecreaseCommission(txnOpts, commission)
+		if err != nil {
+			utils.CheckError("Error in decreasing commission: ", err)
+			return 0
+		}
 		log.Info("Sending DecreaseCommission transaction...")
 		log.Infof("Transaction hash: %s", decreaseCommissionTxn.Hash())
-		utils.WaitForBlockCompletion(client, decreaseCommissionTxn.Hash().String())
-	}
+		decreaseCommissionStatus := utils.WaitForBlockCompletion(client, decreaseCommissionTxn.Hash().String())
+		return decreaseCommissionStatus
 }
+
 
 func init() {
 	rootCmd.AddCommand(setDelegationCmd)
@@ -123,6 +146,5 @@ func init() {
 	setDelegationCmd.Flags().StringVarP(&Address, "address", "", "", "your account address")
 	setDelegationCmd.Flags().StringVarP(&Commission, "commission", "c", "0", "commission")
 
-	addrErr := setDelegationCmd.MarkFlagRequired("address")
-	utils.CheckError("Address error: ", addrErr)
+	setDelegationCmd.MarkFlagRequired("address")
 }

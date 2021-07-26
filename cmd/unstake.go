@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/briandowns/spinner"
+	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"razor/core"
 	"razor/core/types"
@@ -39,7 +40,6 @@ var unstakeCmd = &cobra.Command{
 
 		amountInWei := utils.GetAmountWithChecks(amount, balance)
 
-		epoch, err := WaitForCommitState(client, address, "unstake")
 		utils.CheckError("Error in fetching epoch: ", err)
 		_stakerId, ok := new(big.Int).SetString(stakerId, 10)
 		if !ok {
@@ -52,25 +52,20 @@ var unstakeCmd = &cobra.Command{
 			log.Fatal("Existing lock")
 		}
 
-		stakeManager := utils.GetStakeManager(client)
-		txnOpts := utils.GetTxnOpts(types.TransactionOptions{
+		txnArgs := types.TransactionOptions{
 			Client:         client,
 			Password:       password,
+			Amount:			amountInWei,
 			AccountAddress: address,
 			ChainId:        core.ChainId,
 			GasMultiplier:  config.GasMultiplier,
-		})
+		}
 
-		log.Info("Unstaking coins")
-		txn, err := stakeManager.Unstake(txnOpts, epoch, _stakerId, amountInWei)
-		utils.CheckError("Error in un-staking: ", err)
-		log.Infof("Successfully unstaked %s sRazors", amountInWei)
-		log.Info("Transaction hash: ", txn.Hash())
-		utils.WaitForBlockCompletion(client, fmt.Sprintf("%s", txn.Hash()))
+		unstake(txnArgs, _stakerId)
 
 		if autoWithdraw {
 			log.Info("Starting withdrawal now...")
-			s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+			s := spinner.New(spinner.CharSets[9], 100 * time.Millisecond)
 			s.Start()
 			time.Sleep(time.Duration(core.EpochLength) * time.Second)
 			s.Stop()
@@ -81,6 +76,27 @@ var unstakeCmd = &cobra.Command{
 		}
 
 	},
+}
+
+func unstake(txnArgs types.TransactionOptions, _stakerId *big.Int) int {
+	stakeManager := utils.GetStakeManager(txnArgs.Client)
+	opts := utils.GetOptions(false, txnArgs.AccountAddress, "")
+	stakerId,_ := stakeManager.GetStakerId(&opts, common.HexToAddress(txnArgs.AccountAddress))
+	staker,_ := stakeManager.GetStaker(&opts, stakerId)
+	lock,_ := stakeManager.Locks(&opts,common.HexToAddress(txnArgs.AccountAddress), staker.TokenAddress)
+	if lock.Amount.Cmp(big.NewInt(0)) != 0 {
+		log.Info("Existing lock, cannot unstake")
+		return 0
+	}
+	txnOpts := utils.GetTxnOpts(txnArgs)
+	epoch, err := WaitForCommitState(txnArgs.Client, txnArgs.AccountAddress, "unstake")
+	log.Info("Unstaking coins")
+	txn, err := stakeManager.Unstake(txnOpts, epoch, _stakerId, txnArgs.Amount)
+	utils.CheckError("Error in un-staking: ", err)
+	log.Infof("Successfully unstaked %s sRazors", txnArgs.Amount)
+	log.Info("Transaction hash: ", txn.Hash())
+	unstakeStatus := utils.WaitForBlockCompletion(txnArgs.Client, fmt.Sprintf("%s", txn.Hash()))
+	return unstakeStatus
 }
 
 func init() {
@@ -98,11 +114,8 @@ func init() {
 	unstakeCmd.Flags().StringVarP(&AmountToUnStake, "amount", "a", "0", "amount of sRazors to un-stake")
 	unstakeCmd.Flags().BoolVarP(&WithdrawAutomatically, "autoWithdraw", "w", false, "withdraw after un-stake automatically")
 
-	addrErr := unstakeCmd.MarkFlagRequired("address")
-	utils.CheckError("Address error: ", addrErr)
-	stakerIdErr := unstakeCmd.MarkFlagRequired("stakerId")
-	utils.CheckError("Staker Id error: ", stakerIdErr)
-	amountErr := unstakeCmd.MarkFlagRequired("amount")
-	utils.CheckError("Amount error: ", amountErr)
+	unstakeCmd.MarkFlagRequired("address")
+	unstakeCmd.MarkFlagRequired("stakerId")
+	unstakeCmd.MarkFlagRequired("amount")
 
 }
