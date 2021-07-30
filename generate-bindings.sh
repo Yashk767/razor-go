@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 set -e -o pipefail
 
@@ -28,7 +28,7 @@ contracts=(
   "AssetManager assetManager.go"
   "AssetStorage assetStorage.go"
   "Random random.go"
-  "SchellingCoin schellingCoin.go"
+  "RAZOR RAZOR.go"
   "StakeManager stakeManager.go"
   "StakeStorage stakeStorage.go"
   "VoteManager voteManager.go"

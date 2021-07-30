@@ -2,16 +2,18 @@ package utils
 
 import (
 	"context"
+	"fmt"
+	"github.com/briandowns/spinner"
+	"math/big"
+	"os"
+	"razor/core"
+	"time"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 	"github.com/wealdtech/go-merkletree"
 	"github.com/wealdtech/go-merkletree/keccak256"
-	"math"
-	"math/big"
-	"os"
-	"razor/core"
-	"time"
 )
 
 func ConnectToClient(provider string) *ethclient.Client {
@@ -32,27 +34,26 @@ func FetchBalance(client *ethclient.Client, accountAddress string) (*big.Int, er
 
 func GetDefaultPath() string {
 	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
+	CheckError("Error in getting user home directory: ", err)
 	defaultPath := home + "/.razor"
 	if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
-		os.Mkdir(defaultPath, 0777)
+		mkdirErr := os.Mkdir(defaultPath, 0777)
+		CheckError("Error in creating directory: ", mkdirErr)
 	}
 	return defaultPath
 }
 
-func GetDelayedState(client *ethclient.Client, buffer int8) (int64, error) {
+func GetDelayedState(client *ethclient.Client, buffer int32) (int64, error) {
 	blockNumber, err := client.BlockNumber(context.Background())
 	if err != nil {
 		return -1, err
 	}
-	lowerLimit := (core.StateLength * uint64(buffer))/100
-	upperLimit := core.StateLength - (core.StateLength * uint64(buffer))/100
+	lowerLimit := (core.StateLength * uint64(buffer)) / 100
+	upperLimit := core.StateLength - (core.StateLength*uint64(buffer))/100
 	if blockNumber%(core.StateLength) > upperLimit || blockNumber%(core.StateLength) < lowerLimit {
 		return -1, nil
 	}
-	state := math.Floor(float64(blockNumber / core.StateLength))
+	state := blockNumber / core.StateLength
 	return int64(state) % core.NumberOfStates, nil
 }
 
@@ -67,7 +68,7 @@ func checkTransactionReceipt(client *ethclient.Client, _txHash string) int {
 
 func WaitForBlockCompletion(client *ethclient.Client, hashToRead string) int {
 	timeout := core.StateLength * 2
-	for start := time.Now(); time.Since(start) < time.Duration(timeout)*time.Second ; {
+	for start := time.Now(); time.Since(start) < time.Duration(timeout)*time.Second; {
 		log.Info("Checking if transaction is mined....\n")
 		transactionStatus := checkTransactionReceipt(client, hashToRead)
 		if transactionStatus == 0 {
@@ -81,6 +82,20 @@ func WaitForBlockCompletion(client *ethclient.Client, hashToRead string) int {
 	}
 	log.Info("Timeout Passed")
 	return 0
+}
+
+func WaitTillNextNBlock(waitTime int32) {
+	if waitTime <= 0 {
+		waitTime = 1
+	}
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Start()
+	if err := s.Color("bgBlack", "bold", "fgYellow"); err != nil {
+		log.Error("Error in setting color for spinner")
+	}
+	s.Prefix = "Waiting for the next " + fmt.Sprint(waitTime) + " block(s) "
+	time.Sleep(time.Duration(waitTime*2) * time.Second)
+	s.Stop()
 }
 
 func GetMerkleTree(data []*big.Int) (*merkletree.MerkleTree, error) {

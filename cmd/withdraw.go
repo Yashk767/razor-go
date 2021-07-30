@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"razor/core"
 	"razor/core/types"
 	"razor/utils"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -43,35 +44,44 @@ to quickly create a Cobra application.`,
 			log.Fatal("Set string error in converting staker id")
 		}
 
-		lock, err := utils.GetLock(client, address, _stakerId)
-		utils.CheckError("Error in fetching lock: ", err)
-		withdrawReleasePeriod, err := utils.GetWithdrawReleasePeriod(client, address)
-		utils.CheckError("Error in fetching withdraw release period", err)
-		withdrawBefore := big.NewInt(0).Add(lock.WithdrawAfter, withdrawReleasePeriod)
+		checkForCommitStateAndWithdraw(client, types.Account{
+			Address:  address,
+			Password: password,
+		}, config, _stakerId)
 
-		epoch, err := WaitForCommitState(client, address, "withdraw")
-		utils.CheckError("Error in fetching epoch: ", err)
-
-		if epoch.Cmp(withdrawBefore) > 0 {
-			log.Fatal("Withdrawal period has passed. Cannot withdraw now, please reset the lock!")
-		}
-
-		for i := epoch; i.Cmp(withdrawBefore) < 0 ; {
-			if epoch.Cmp(lock.WithdrawAfter) >= 0 && epoch.Cmp(withdrawBefore) <= 0 {
-				withdraw(client, types.TransactionOptions{
-					Client:         client,
-					Password:       password,
-					AccountAddress: address,
-					ChainId:        core.ChainId,
-					GasMultiplier:  config.GasMultiplier,
-				}, epoch, _stakerId)
-				break
-			} else {
-				i, err = WaitForCommitState(client, address, "withdraw")
-				utils.CheckError("Error in fetching epoch: ", err)
-			}
-		}
 	},
+}
+
+func checkForCommitStateAndWithdraw(client *ethclient.Client, account types.Account, configurations types.Configurations, stakerId *big.Int) {
+
+	lock, err := utils.GetLock(client, account.Address, stakerId)
+	utils.CheckError("Error in fetching lock: ", err)
+	withdrawReleasePeriod, err := utils.GetWithdrawReleasePeriod(client, account.Address)
+	utils.CheckError("Error in fetching withdraw release period", err)
+	withdrawBefore := big.NewInt(0).Add(lock.WithdrawAfter, withdrawReleasePeriod)
+
+	epoch, err := WaitForCommitState(client, account.Address, "withdraw")
+	utils.CheckError("Error in fetching epoch: ", err)
+
+	if epoch.Cmp(withdrawBefore) > 0 {
+		log.Fatal("Withdrawal period has passed. Cannot withdraw now, please reset the lock!")
+	}
+
+	for i := epoch; i.Cmp(withdrawBefore) < 0; {
+		if epoch.Cmp(lock.WithdrawAfter) >= 0 && epoch.Cmp(withdrawBefore) <= 0 {
+			withdraw(client, types.TransactionOptions{
+				Client:         client,
+				Password:       account.Password,
+				AccountAddress: account.Address,
+				ChainId:        core.ChainId,
+				GasMultiplier:  configurations.GasMultiplier,
+			}, epoch, stakerId)
+			break
+		} else {
+			i, err = WaitForCommitState(client, account.Address, "withdraw")
+			utils.CheckError("Error in fetching epoch: ", err)
+		}
+	}
 }
 
 func withdraw(client *ethclient.Client, txnOpts types.TransactionOptions, epoch *big.Int, stakerId *big.Int) {
@@ -98,7 +108,8 @@ func init() {
 	withdrawCmd.Flags().StringVarP(&Address, "address", "", "", "address of the user")
 	withdrawCmd.Flags().StringVarP(&StakerId, "stakerId", "", "", "staker's id to withdraw")
 
-	withdrawCmd.MarkFlagRequired("address")
-	withdrawCmd.MarkFlagRequired("stakerId")
-
+	addrErr := withdrawCmd.MarkFlagRequired("address")
+	utils.CheckError("Address error: ", addrErr)
+	stakerIdErr := withdrawCmd.MarkFlagRequired("stakerId")
+	utils.CheckError("Staker id error: ", stakerIdErr)
 }

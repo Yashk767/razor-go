@@ -28,7 +28,7 @@ func GetActiveAssets(client *ethclient.Client, address string) ([]types.Job, []t
 
 	assetManager := GetAssetManager(client)
 	callOpts := GetOptions(false, address, "")
-	for assetIndex := 1; assetIndex < int(numOfAssets.Int64()); assetIndex++ {
+	for assetIndex := 1; assetIndex <= int(numOfAssets.Int64()); assetIndex++ {
 		assetType, err := assetManager.GetAssetType(&callOpts, big.NewInt(int64(assetIndex)))
 		if err != nil {
 			log.Error("Error in fetching asset: ", assetIndex)
@@ -57,6 +57,7 @@ func GetActiveJob(client *ethclient.Client, address string, jobId *big.Int) (typ
 	assetManager := GetAssetManager(client)
 	callOpts := GetOptions(false, address, "")
 	epoch, err := GetEpoch(client, address)
+
 	if err != nil {
 		return types.Job{}, err
 	}
@@ -64,7 +65,7 @@ func GetActiveJob(client *ethclient.Client, address string, jobId *big.Int) (typ
 	if err != nil {
 		return types.Job{}, err
 	}
-	if !job.Fulfilled && job.Epoch.Cmp(epoch) < 0 {
+	if job.Active && job.Epoch.Cmp(epoch) < 0 {
 		return job, nil
 	}
 	return types.Job{}, errors.New("job already fulfilled")
@@ -89,7 +90,6 @@ func GetActiveCollection(client *ethclient.Client, address string, collectionId 
 func GetDataToCommitFromJobs(jobs []types.Job) []*big.Int {
 	var data []*big.Int
 	for _, job := range jobs {
-		datum := big.NewFloat(0)
 		var parsedJSON map[string]interface{}
 
 		response, err := GetDataFromAPI(job.Url)
@@ -110,7 +110,7 @@ func GetDataToCommitFromJobs(jobs []types.Job) []*big.Int {
 			log.Error("Error in fetching value from parsed data ", err)
 			continue
 		}
-		datum, err = ConvertToNumber(parsedData)
+		datum, err := ConvertToNumber(parsedData)
 		if err != nil {
 			log.Error("Result is not a number")
 			data = append(data, big.NewInt(0))
