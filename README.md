@@ -229,5 +229,16 @@ $ ./razor vote --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c --gasprice 1
 ```
 This will cause this particular vote command to run with a gas price of 10.
 
+###Local Development Setup
+Contracts
+1. Add your addresses to `STAKER_ADDRESSES` in .env.local to get the account seed with razors.
+2. Start local blockchain using hardhat ``npx hardhat node``
+3. Deploy the contracts ``npm run deploy:local``
+
+Razor-go
+1. Copy the new deployed addresses of contracts and paste them in core/constants.go respectively.
+2. Change the ChainId to ```ChainId = big.NewInt(31337)``` as we are using hardhat.
+3. Build the source razor node, refer [this](#building-the-source)
+
 ### Contribute to razor-go 
 We would really appreciate your contribution. To see our [contribution guideline](https://github.com/razor-network/razor-go/blob/main/.github/CONTRIBUTING.md)
