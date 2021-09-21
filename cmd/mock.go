@@ -36,6 +36,8 @@ var AssignPasswordMock func(*pflag.FlagSet) string
 
 var GetDefaultPathMock func() (string, error)
 
+var GetAmountInDecimalMock func(amountInWei *big.Int) *big.Float
+
 var AllowanceMock func(*ethclient.Client, *bind.CallOpts, common.Address, common.Address) (*big.Int, error)
 
 var ApproveMock func(*ethclient.Client, *bind.TransactOpts, common.Address, *big.Int) (*Types.Transaction, error)
@@ -43,6 +45,8 @@ var ApproveMock func(*ethclient.Client, *bind.TransactOpts, common.Address, *big
 var HashMock func(*Types.Transaction) common.Hash
 
 var StakeMock func(*ethclient.Client, *bind.TransactOpts, uint32, *big.Int) (*Types.Transaction, error)
+
+var DelegateMock func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, *big.Int) (*Types.Transaction, error)
 
 var CreateAccountMock func(string, string) accounts.Account
 
@@ -74,6 +78,10 @@ func (u UtilsMock) GetDefaultPath() (string, error) {
 	return GetDefaultPathMock()
 }
 
+func (u UtilsMock) GetAmountInDecimal(amountInWei *big.Int) *big.Float {
+	return GetAmountInDecimalMock(amountInWei)
+}
+
 func (tokenManagerMock TokenManagerMock) Allowance(client *ethclient.Client, opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	return AllowanceMock(client, opts, owner, spender)
 }
@@ -88,6 +96,10 @@ func (transactionMock TransactionMock) Hash(txn *Types.Transaction) common.Hash 
 
 func (stakeManagerMock StakeManagerMock) Stake(client *ethclient.Client, opts *bind.TransactOpts, epoch uint32, amount *big.Int) (*Types.Transaction, error) {
 	return StakeMock(client, opts, epoch, amount)
+}
+
+func (stakeManagerMock StakeManagerMock) Delegate(client *ethclient.Client, opts *bind.TransactOpts, epoch uint32, stakerId uint32, amount *big.Int) (*Types.Transaction, error) {
+	return DelegateMock(client, opts, epoch, stakerId, amount)
 }
 
 func (account AccountMock) CreateAccount(path string, password string) accounts.Account {
