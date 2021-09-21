@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/pflag"
 	"math/big"
 	"razor/core/types"
-	"razor/pkg/bindings"
 )
 
 type UtilsMock struct{}
@@ -21,8 +20,6 @@ type TransactionMock struct{}
 type StakeManagerMock struct{}
 
 type AccountMock struct{}
-
-var GetTokenManagerMock func(*ethclient.Client) *bindings.RAZOR
 
 var GetOptionsMock func(bool, string, string) bind.CallOpts
 
@@ -49,10 +46,6 @@ var StakeMock func(*ethclient.Client, *bind.TransactOpts, uint32, *big.Int) (*Ty
 var DelegateMock func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, *big.Int) (*Types.Transaction, error)
 
 var CreateAccountMock func(string, string) accounts.Account
-
-func (u UtilsMock) GetTokenManager(client *ethclient.Client) *bindings.RAZOR {
-	return GetTokenManagerMock(client)
-}
 
 func (u UtilsMock) GetOptions(pending bool, from string, blockNumber string) bind.CallOpts {
 	return GetOptionsMock(pending, from, blockNumber)
