@@ -4,24 +4,24 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	types2 "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/logrusorgru/aurora/v3"
-	solsha3 "github.com/miguelmota/go-solidity-sha3"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"math"
 	"math/big"
 	"razor/accounts"
 	"razor/core"
 	"razor/core/types"
+	"razor/path"
 	jobManager "razor/pkg/bindings"
 	"razor/utils"
 	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	types2 "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	solsha3 "github.com/miguelmota/go-solidity-sha3"
+	"github.com/spf13/cobra"
 )
 
 var voteCmd = &cobra.Command{
@@ -33,17 +33,14 @@ Example:
   ./razor vote --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := GetConfigData()
-		if err != nil {
-			log.Fatal("Error in fetching config details: ", err)
-		}
+		utils.CheckError("Error in fetching config details: ", err)
 
 		password := utils.AssignPassword(cmd.Flags())
 		rogueMode, _ := cmd.Flags().GetBool("rogue")
 		client := utils.ConnectToClient(config.Provider)
 		header, err := client.HeaderByNumber(context.Background(), nil)
-		if err != nil {
-			log.Fatal(err)
-		}
+		utils.CheckError("Error in getting block: ", err)
+
 		address, _ := cmd.Flags().GetString("address")
 		account := types.Account{Address: address, Password: password}
 		for {
@@ -63,7 +60,8 @@ Example:
 
 var (
 	_committedData   []*big.Int
-	lastVerification *big.Int
+	lastVerification uint32
+	blockConfirmed   uint32
 )
 
 func handleBlock(client *ethclient.Client, account types.Account, blockNumber *big.Int, config types.Configurations, rogueMode bool) {
@@ -82,7 +80,7 @@ func handleBlock(client *ethclient.Client, account types.Account, blockNumber *b
 		log.Error("Error in getting staker id: ", err)
 		return
 	}
-	if stakerId.Cmp(big.NewInt(0)) == 0 {
+	if stakerId == 0 {
 		log.Error("Staker doesn't exist")
 		return
 	}
@@ -101,13 +99,21 @@ func handleBlock(client *ethclient.Client, account types.Account, blockNumber *b
 		log.Error("Error in getting minimum stake amount: ", err)
 		return
 	}
-	log.Info(aurora.Red("🔲 Block:"), aurora.Red(blockNumber), aurora.Yellow("⌛ Epoch:"), aurora.Yellow(epoch), aurora.Green("⏱️ State:"), aurora.Green(state), aurora.Blue("📒:"), aurora.Blue(account.Address), aurora.BrightBlue("👤 Staker ID:"), aurora.BrightBlue(stakerId), aurora.Cyan("💰Stake:"), aurora.Cyan(stakedAmount), aurora.Magenta("Ξ:"), aurora.Magenta(ethBalance))
+	actualStake, err := utils.ConvertWeiToEth(stakedAmount)
+	if err != nil {
+		log.Error("Error in converting stakedAmount from wei denomination")
+	}
+	actualBalance, err := utils.ConvertWeiToEth(ethBalance)
+	if err != nil {
+		log.Error("Error in converting ethBalance from wei denomination")
+	}
+	log.Debug("Block:", blockNumber, " Epoch:", epoch, " State:", utils.GetStateName(state), " Address:", account.Address, " Staker ID:", stakerId, " Stake:", actualStake, " Eth Balance:", actualBalance)
 	if stakedAmount.Cmp(minStakeAmount) < 0 {
 		log.Error("Stake is below minimum required. Cannot vote.")
 		if stakedAmount.Cmp(big.NewInt(0)) == 0 {
 			log.Error("Stopped voting as total stake is already withdrawn.")
 		} else {
-			log.Info("Auto starting Unstake followed by Withdraw")
+			log.Debug("Auto starting Unstake followed by Withdraw")
 			AutoUnstakeAndWithdraw(client, account, stakedAmount, config)
 			log.Error("Stopped voting as total stake is withdrawn now")
 		}
@@ -122,8 +128,13 @@ func handleBlock(client *ethclient.Client, account types.Account, blockNumber *b
 
 	switch state {
 	case 0:
-		lastCommit := staker.EpochLastCommitted
-		if lastCommit != nil && lastCommit.Cmp(epoch) >= 0 {
+		lastCommit, err := utils.GetEpochLastCommitted(client, account.Address, stakerId)
+		if err != nil {
+			log.Error("Error in fetching last commit: ", err)
+			break
+		}
+		if lastCommit >= epoch {
+			log.Warnf("Cannot commit in epoch %d because last committed epoch is %d", epoch, lastCommit)
 			break
 		}
 		secret := calculateSecret(account, epoch)
@@ -137,18 +148,25 @@ func handleBlock(client *ethclient.Client, account types.Account, blockNumber *b
 		}
 		_committedData = data
 	case 1:
-		lastReveal := staker.EpochLastRevealed
-		if _committedData == nil || (lastReveal != nil && lastReveal.Cmp(epoch) >= 0) {
+		lastReveal, err := utils.GetEpochLastRevealed(client, account.Address, stakerId)
+		if err != nil {
+			log.Error("Error in fetching last reveal: ", err)
+			break
+		}
+		if _committedData == nil || lastReveal >= epoch {
+			log.Warnf("Last reveal: %d", lastReveal)
+			log.Warnf("Cannot reveal in epoch %d", epoch)
 			break
 		}
 		secret := calculateSecret(account, epoch)
 		if secret == nil {
 			break
 		}
-		if err := HandleRevealState(staker, epoch); err != nil {
+		if err := HandleRevealState(client, account.Address, staker, epoch); err != nil {
 			log.Error(err)
 			break
 		}
+		log.Debug("Epoch last revealed: ", lastReveal)
 		Reveal(client, _committedData, secret, account, account.Address, config)
 	case 2:
 		lastProposal, err := getLastProposedEpoch(client, blockNumber, stakerId)
@@ -156,18 +174,41 @@ func handleBlock(client *ethclient.Client, account types.Account, blockNumber *b
 			log.Error("Error in fetching last proposal: ", err)
 			break
 		}
-		if lastProposal != nil && lastProposal.Cmp(epoch) >= 0 {
+		if lastProposal >= epoch {
+			log.Warnf("Cannot propose in epoch %d because last proposed epoch is %d", epoch, lastProposal)
 			break
 		}
-		lastProposal = epoch
-		log.Info("Proposing block....")
+		lastReveal, err := utils.GetEpochLastRevealed(client, account.Address, stakerId)
+		if err != nil {
+			log.Error("Error in fetching last reveal: ", err)
+			break
+		}
+		if lastReveal < epoch {
+			log.Warnf("Cannot propose in epoch %d because last reveal was in epoch %d", epoch, lastReveal)
+			break
+		}
 		Propose(client, account, config, stakerId, epoch, rogueMode)
 	case 3:
-		if lastVerification != nil && lastVerification.Cmp(epoch) >= 0 {
+		if lastVerification >= epoch {
+			break
+		}
+		if rogueMode {
+			log.Warn("Won't dispute in rogue mode..")
 			break
 		}
 		lastVerification = epoch
 		HandleDispute(client, config, account, epoch)
+	case 4:
+		if lastVerification == epoch && blockConfirmed < epoch {
+			ClaimBlockReward(types.TransactionOptions{
+				Client:         client,
+				Password:       account.Password,
+				AccountAddress: account.Address,
+				ChainId:        core.ChainId,
+				Config:         config,
+			})
+			blockConfirmed = epoch
+		}
 	case -1:
 		if config.WaitTime > 5 {
 			time.Sleep(5 * time.Second)
@@ -178,7 +219,7 @@ func handleBlock(client *ethclient.Client, account types.Account, blockNumber *b
 	fmt.Println()
 }
 
-func getLastProposedEpoch(client *ethclient.Client, blockNumber *big.Int, stakerId *big.Int) (*big.Int, error) {
+func getLastProposedEpoch(client *ethclient.Client, blockNumber *big.Int, stakerId uint32) (uint32, error) {
 	maxRetries := 3
 	numberOfBlocks := int64(core.StateLength) * core.NumberOfStates
 	query := ethereum.FilterQuery{
@@ -197,36 +238,40 @@ func getLastProposedEpoch(client *ethclient.Client, blockNumber *big.Int, staker
 		if err != nil {
 			log.Error("Error in fetching logs: ", err)
 			retryingIn := math.Pow(2, float64(retry))
-			log.Infof("Retrying in %f seconds.....", retryingIn)
+			log.Debugf("Retrying in %f seconds.....", retryingIn)
 			time.Sleep(time.Duration(retryingIn) * time.Second)
 			continue
 		}
 		break
 	}
 	if err != nil {
-		return big.NewInt(0), err
+		return 0, err
 	}
 	contractAbi, err := abi.JSON(strings.NewReader(jobManager.BlockManagerABI))
 	if err != nil {
-		return big.NewInt(0), err
+		return 0, err
 	}
-	epochLastProposed := big.NewInt(0)
+	epochLastProposed := uint32(0)
 	for _, vLog := range logs {
 		data, unpackErr := contractAbi.Unpack("Proposed", vLog.Data)
 		if unpackErr != nil {
 			log.Error(unpackErr)
 			continue
 		}
-		if stakerId.Cmp(data[1].(*big.Int)) == 0 {
-			epochLastProposed = data[0].(*big.Int)
+		if stakerId == data[1].(uint32) {
+			epochLastProposed = data[0].(uint32)
 		}
 	}
 	return epochLastProposed, nil
 }
 
-func calculateSecret(account types.Account, epoch *big.Int) []byte {
-	hash := solsha3.SoliditySHA3([]string{"address", "uint256", "uint256", "string"}, []interface{}{account.Address, epoch.String(), core.ChainId.String(), "razororacle"})
-	signedData, err := accounts.Sign(hash, account, utils.GetDefaultPath())
+func calculateSecret(account types.Account, epoch uint32) []byte {
+	hash := solsha3.SoliditySHA3([]string{"address", "uint32", "uint256", "string"}, []interface{}{account.Address, epoch, core.ChainId.String(), "razororacle"})
+	razorPath, err := path.GetDefaultPath()
+	if err != nil {
+		log.Error("Error in fetching .razor directory: ", err)
+	}
+	signedData, err := accounts.Sign(hash, account, razorPath)
 	if err != nil {
 		log.Error("Error in signing the data: ", err)
 		return nil

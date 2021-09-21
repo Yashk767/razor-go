@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"github.com/magiconair/properties/assert"
-	log "github.com/sirupsen/logrus"
 	"math/big"
 	"reflect"
 	"testing"
+
+	"github.com/magiconair/properties/assert"
 )
 
 func TestAllZero(t *testing.T) {
@@ -165,46 +165,6 @@ func TestMultiplyFloatAndBigInt(t *testing.T) {
 	}
 }
 
-func TestMultiplyToEightDecimals(t *testing.T) {
-	type args struct {
-		num *big.Float
-	}
-	tests := []struct {
-		name string
-		args args
-		want *big.Int
-	}{
-		{
-			name: "Test 1",
-			args: args{
-				num: big.NewFloat(1.22342),
-			},
-			want: big.NewInt(122342000),
-		},
-		{
-			name: "Test 2",
-			args: args{
-				num: big.NewFloat(0),
-			},
-			want: big.NewInt(0),
-		},
-		{
-			name: "Test 3",
-			args: args{
-				num: nil,
-			},
-			want: big.NewInt(0),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := MultiplyToEightDecimals(tt.args.num); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MultiplyToEightDecimals() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCheckAmountAndBalance(t *testing.T) {
 	type args struct {
 		amount  *big.Int
@@ -254,9 +214,9 @@ func TestCheckAmountAndBalance(t *testing.T) {
 		},
 	}
 
-	defer func() { log.StandardLogger().ExitFunc = nil }()
+	defer func() { log.ExitFunc = nil }()
 	var fatal bool
-	log.StandardLogger().ExitFunc = func(int) { fatal = true }
+	log.ExitFunc = func(int) { fatal = true }
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -417,6 +377,7 @@ func Test_performAggregation(t *testing.T) {
 	type args struct {
 		data              []*big.Int
 		aggregationMethod uint32
+		power             int8
 	}
 
 	tests := []struct {
@@ -430,8 +391,9 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(2)},
 				aggregationMethod: 1,
+				power:             2,
 			},
-			want:    big.NewInt(1),
+			want:    big.NewInt(100),
 			wantErr: false,
 		},
 		{
@@ -439,8 +401,9 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{big.NewInt(0), big.NewInt(1)},
 				aggregationMethod: 1,
+				power:             3,
 			},
-			want:    big.NewInt(1),
+			want:    big.NewInt(1000),
 			wantErr: false,
 		},
 		{
@@ -448,6 +411,7 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{big.NewInt(1)},
 				aggregationMethod: 1,
+				power:             0,
 			},
 			want:    big.NewInt(1),
 			wantErr: false,
@@ -457,8 +421,9 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{big.NewInt(500), big.NewInt(1000), big.NewInt(1500), big.NewInt(2000)},
 				aggregationMethod: 1,
+				power:             8,
 			},
-			want:    big.NewInt(1500),
+			want:    big.NewInt(150000000000),
 			wantErr: false,
 		},
 		{
@@ -466,6 +431,7 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{},
 				aggregationMethod: 1,
+				power:             0,
 			},
 			want:    nil,
 			wantErr: true,
@@ -473,8 +439,9 @@ func Test_performAggregation(t *testing.T) {
 		{
 			name: "Test Mean for multiple number of elements",
 			args: args{
-				data:              []*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(2)},
+				data:              []*big.Int{big.NewInt(0), big.NewInt(10), big.NewInt(20)},
 				aggregationMethod: 2,
+				power:             -1,
 			},
 			want:    big.NewInt(1),
 			wantErr: false,
@@ -482,10 +449,11 @@ func Test_performAggregation(t *testing.T) {
 		{
 			name: "Test Mean for single element",
 			args: args{
-				data:              []*big.Int{big.NewInt(1)},
+				data:              []*big.Int{big.NewInt(100000)},
 				aggregationMethod: 2,
+				power:             -2,
 			},
-			want:    big.NewInt(1),
+			want:    big.NewInt(1000),
 			wantErr: false,
 		},
 		{
@@ -493,8 +461,9 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{big.NewInt(500), big.NewInt(1000), big.NewInt(1500), big.NewInt(2000)},
 				aggregationMethod: 2,
+				power:             -1,
 			},
-			want:    big.NewInt(1250),
+			want:    big.NewInt(125),
 			wantErr: false,
 		},
 		{
@@ -502,6 +471,7 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{},
 				aggregationMethod: 2,
+				power:             0,
 			},
 			want:    nil,
 			wantErr: true,
@@ -511,6 +481,7 @@ func Test_performAggregation(t *testing.T) {
 			args: args{
 				data:              []*big.Int{big.NewInt(1)},
 				aggregationMethod: 3,
+				power:             2,
 			},
 			want:    nil,
 			wantErr: true,
@@ -518,13 +489,106 @@ func Test_performAggregation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := performAggregation(tt.args.data, tt.args.aggregationMethod)
+			got, err := performAggregation(tt.args.data, tt.args.aggregationMethod, tt.args.power)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetDataFromJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("performAggregation() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMultiplyWithPower(t *testing.T) {
+	type args struct {
+		num   *big.Float
+		power int8
+	}
+	tests := []struct {
+		name string
+		args args
+		want *big.Int
+	}{
+		{
+			name: "Test value when power is 8",
+			args: args{
+				num:   big.NewFloat(1.22342),
+				power: 8,
+			},
+			want: big.NewInt(122342000),
+		},
+		{
+			name: "Test value when number is 0",
+			args: args{
+				num:   big.NewFloat(0),
+				power: 0,
+			},
+			want: big.NewInt(0),
+		},
+		{
+			name: "Test value when number is nil",
+			args: args{
+				num:   nil,
+				power: 10,
+			},
+			want: big.NewInt(0),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MultiplyWithPower(tt.args.num, tt.args.power); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MultiplyWithPower() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConvertWeiToEth(t *testing.T) {
+	type args struct {
+		data *big.Int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *big.Float
+		wantErr bool
+	}{
+		{
+			name:    "Test if the value is 0",
+			args:    args{big.NewInt(0)},
+			want:    big.NewFloat(0),
+			wantErr: true,
+		},
+		{
+			name:    "Test if data is bigger than 1e18",
+			args:    args{big.NewInt(2 * 1e18)},
+			want:    big.NewFloat(2).SetPrec(32),
+			wantErr: false,
+		},
+		{
+			name:    "Test if data is smaller than 1e18",
+			args:    args{big.NewInt(234 * 1e12)},
+			want:    big.NewFloat(234 * 1e-6).SetPrec(32),
+			wantErr: false,
+		},
+		{
+			name:    "Test if data is in the order of 1e18",
+			args:    args{big.NewInt(392 * 1e16)},
+			want:    big.NewFloat(3.92).SetPrec(32),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ConvertWeiToEth(tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConvertWeiToEth() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvertWeiToEth() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
