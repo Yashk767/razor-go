@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"github.com/spf13/pflag"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -11,8 +12,8 @@ func TestSetConfig(t *testing.T) {
 	var flagSet *pflag.FlagSet
 
 	utilsStruct := UtilsStruct{
-		razorUtils:   UtilsMock{},
-		flagSetUtils: FlagSetMock{},
+		razorUtils:   razorInterface.UtilsMock{},
+		flagSetUtils: razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -226,39 +227,39 @@ func TestSetConfig(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		GetStringProviderMock = func(set *pflag.FlagSet) (string, error) {
+		razorInterface.GetStringProviderMock = func(set *pflag.FlagSet) (string, error) {
 			return tt.args.provider, tt.args.providerErr
 		}
 
-		GetFloat32GasMultiplierMock = func(set *pflag.FlagSet) (float32, error) {
+		razorInterface.GetFloat32GasMultiplierMock = func(set *pflag.FlagSet) (float32, error) {
 			return tt.args.gasmultiplier, tt.args.gasmultiplierErr
 		}
 
-		GetInt32BufferMock = func(set *pflag.FlagSet) (int32, error) {
+		razorInterface.GetInt32BufferMock = func(set *pflag.FlagSet) (int32, error) {
 			return tt.args.buffer, tt.args.bufferErr
 		}
 
-		GetInt32WaitMock = func(set *pflag.FlagSet) (int32, error) {
+		razorInterface.GetInt32WaitMock = func(set *pflag.FlagSet) (int32, error) {
 			return tt.args.waitTime, tt.args.waitTimeErr
 		}
 
-		GetInt32GasPriceMock = func(set *pflag.FlagSet) (int32, error) {
+		razorInterface.GetInt32GasPriceMock = func(set *pflag.FlagSet) (int32, error) {
 			return tt.args.gasPrice, tt.args.gasPriceErr
 		}
 
-		GetStringLogLevelMock = func(set *pflag.FlagSet) (string, error) {
+		razorInterface.GetStringLogLevelMock = func(set *pflag.FlagSet) (string, error) {
 			return tt.args.logLevel, tt.args.logLevelErr
 		}
 
-		GetFloat32GasLimitMock = func(set *pflag.FlagSet) (float32, error) {
+		razorInterface.GetFloat32GasLimitMock = func(set *pflag.FlagSet) (float32, error) {
 			return tt.args.gasLimitMultiplier, tt.args.gasLimitMultiplierErr
 		}
 
-		GetConfigFilePathMock = func() (string, error) {
+		razorInterface.GetConfigFilePathMock = func() (string, error) {
 			return tt.args.path, tt.args.pathErr
 		}
 
-		ViperWriteConfigAsMock = func(string) error {
+		razorInterface.ViperWriteConfigAsMock = func(string) error {
 			return tt.args.configErr
 		}
 

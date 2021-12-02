@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -26,10 +27,10 @@ func Test_extendLock(t *testing.T) {
 	var client *ethclient.Client
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
-		flagSetUtils:      FlagSetMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -116,31 +117,31 @@ func Test_extendLock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			AssignPasswordMock = func(*pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(*pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetUint32StakerIdMock = func(*pflag.FlagSet) (uint32, error) {
+			razorInterface.GetUint32StakerIdMock = func(*pflag.FlagSet) (uint32, error) {
 				return tt.args.stakerId, tt.args.stakerIdErr
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return txnOpts
 			}
 
-			ExtendLockMock = func(*ethclient.Client, *bind.TransactOpts, uint32) (*Types.Transaction, error) {
+			razorInterface.ExtendLockMock = func(*ethclient.Client, *bind.TransactOpts, uint32) (*Types.Transaction, error) {
 				return tt.args.resetLockTxn, tt.args.resetLockErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

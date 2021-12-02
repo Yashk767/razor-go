@@ -5,14 +5,15 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/pflag"
+	"razor/razorInterface"
 	"testing"
 )
 
 func TestCreate(t *testing.T) {
 
 	utilsStruct := UtilsStruct{
-		razorUtils:   UtilsMock{},
-		accountUtils: AccountMock{},
+		razorUtils:   razorInterface.UtilsMock{},
+		accountUtils: razorInterface.AccountMock{},
 	}
 
 	var flagSet *pflag.FlagSet
@@ -62,15 +63,15 @@ func TestCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssignPasswordMock = func(flagset *pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(flagset *pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetDefaultPathMock = func() (string, error) {
+			razorInterface.GetDefaultPathMock = func() (string, error) {
 				return tt.args.path, tt.args.pathErr
 			}
 
-			CreateAccountMock = func(string, string) accounts.Account {
+			razorInterface.CreateAccountMock = func(string, string) accounts.Account {
 				return accounts.Account{
 					Address: tt.args.account.Address,
 					URL:     accounts.URL{Scheme: "TestKeyScheme", Path: "test/key/path"},

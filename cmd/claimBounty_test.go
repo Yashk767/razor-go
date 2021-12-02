@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 	"time"
 )
@@ -22,9 +23,9 @@ func Test_executeClaimBounty(t *testing.T) {
 	var flagSet *pflag.FlagSet
 
 	utilsStruct := UtilsStruct{
-		razorUtils:   UtilsMock{},
+		razorUtils:   razorInterface.UtilsMock{},
 		cmdUtils:     UtilsCmdMock{},
-		flagSetUtils: FlagSetMock{},
+		flagSetUtils: razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -110,19 +111,19 @@ func Test_executeClaimBounty(t *testing.T) {
 				return tt.args.config, tt.args.configErr
 			}
 
-			AssignPasswordMock = func(*pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(*pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetUint32BountyIdMock = func(*pflag.FlagSet) (uint32, error) {
+			razorInterface.GetUint32BountyIdMock = func(*pflag.FlagSet) (uint32, error) {
 				return tt.args.bountyId, tt.args.bountyIdErr
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
 
@@ -130,7 +131,7 @@ func Test_executeClaimBounty(t *testing.T) {
 				return tt.args.claimBountyTxn, tt.args.claimBountyErr
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return 1
 			}
 
@@ -156,9 +157,9 @@ func Test_claimBounty(t *testing.T) {
 	var blockTime int64
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 		cmdUtils:          UtilsCmdMock{},
 	}
 
@@ -249,35 +250,35 @@ func Test_claimBounty(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		GetEpochMock = func(*ethclient.Client) (uint32, error) {
+		razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 			return tt.args.epoch, tt.args.epochErr
 		}
 
-		GetOptionsMock = func(bool, string, string) bind.CallOpts {
+		razorInterface.GetOptionsMock = func(bool, string, string) bind.CallOpts {
 			return callOpts
 		}
 
-		GetBountyLockMock = func(*ethclient.Client, *bind.CallOpts, uint32) (types.BountyLock, error) {
+		razorInterface.GetBountyLockMock = func(*ethclient.Client, *bind.CallOpts, uint32) (types.BountyLock, error) {
 			return tt.args.bountyLock, tt.args.bountyLockErr
 		}
 
-		SleepMock = func(time.Duration) {
+		razorInterface.SleepMock = func(time.Duration) {
 
 		}
 
-		CalculateBlockTimeMock = func(*ethclient.Client) int64 {
+		razorInterface.CalculateBlockTimeMock = func(*ethclient.Client) int64 {
 			return blockTime
 		}
 
-		GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+		razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 			return txnOpts
 		}
 
-		RedeemBountyMock = func(*ethclient.Client, *bind.TransactOpts, uint32) (*Types.Transaction, error) {
+		razorInterface.RedeemBountyMock = func(*ethclient.Client, *bind.TransactOpts, uint32) (*Types.Transaction, error) {
 			return tt.args.redeemBountyTxn, tt.args.redeemBountyErr
 		}
 
-		HashMock = func(*Types.Transaction) common.Hash {
+		razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 			return tt.args.hash
 		}
 

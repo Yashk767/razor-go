@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 	"time"
 )
@@ -28,9 +29,9 @@ func TestUnstake(t *testing.T) {
 	var valueInWei *big.Int
 	var stakerId uint32
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 		cmdUtils:          UtilsCmdMock{},
 	}
 
@@ -109,7 +110,7 @@ func TestUnstake(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetLockMock = func(*ethclient.Client, string, uint32) (types.Locks, error) {
+			razorInterface.GetLockMock = func(*ethclient.Client, string, uint32) (types.Locks, error) {
 				return tt.args.lock, tt.args.lockErr
 			}
 
@@ -117,19 +118,19 @@ func TestUnstake(t *testing.T) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return txnOpts
 			}
 
-			UnstakeContractMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, *big.Int) (*Types.Transaction, error) {
+			razorInterface.UnstakeContractMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, *big.Int) (*Types.Transaction, error) {
 				return tt.args.unstakeTxn, tt.args.unstakeErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return 1
 			}
 
@@ -160,11 +161,11 @@ func Test_executeUnstake(t *testing.T) {
 	var flagSet *pflag.FlagSet
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 		cmdUtils:          UtilsCmdMock{},
-		flagSetUtils:      FlagSetMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -314,19 +315,19 @@ func Test_executeUnstake(t *testing.T) {
 				return tt.args.config, tt.args.configErr
 			}
 
-			AssignPasswordMock = func(*pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(*pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetBoolAutoWithdrawMock = func(*pflag.FlagSet) (bool, error) {
+			razorInterface.GetBoolAutoWithdrawMock = func(*pflag.FlagSet) (bool, error) {
 				return tt.args.autoWithdraw, tt.args.autoWithdrawErr
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
 
@@ -334,15 +335,15 @@ func Test_executeUnstake(t *testing.T) {
 				return tt.args.value, tt.args.valueErr
 			}
 
-			CheckEthBalanceIsZeroMock = func(*ethclient.Client, string) {
+			razorInterface.CheckEthBalanceIsZeroMock = func(*ethclient.Client, string) {
 
 			}
 
-			AssignStakerIdMock = func(*pflag.FlagSet, *ethclient.Client, string) (uint32, error) {
+			razorInterface.AssignStakerIdMock = func(*pflag.FlagSet, *ethclient.Client, string) (uint32, error) {
 				return tt.args.stakerId, tt.args.stakerIdErr
 			}
 
-			GetLockMock = func(*ethclient.Client, string, uint32) (types.Locks, error) {
+			razorInterface.GetLockMock = func(*ethclient.Client, string, uint32) (types.Locks, error) {
 				return tt.args.lock, tt.args.lockErr
 			}
 
@@ -371,7 +372,7 @@ func TestAutoWithdraw(t *testing.T) {
 	var stakerId uint32
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 		cmdUtils:   UtilsCmdMock{},
 	}
 
@@ -412,11 +413,11 @@ func TestAutoWithdraw(t *testing.T) {
 				return tt.args.withdrawFundsHash, tt.args.withdrawFundsErr
 			}
 
-			SleepMock = func(time.Duration) {
+			razorInterface.SleepMock = func(time.Duration) {
 
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return 1
 			}
 			gotErr := AutoWithdraw(txnArgs, stakerId, utilsStruct)

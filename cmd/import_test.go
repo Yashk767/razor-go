@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -19,9 +20,9 @@ func Test_importAccount(t *testing.T) {
 	}
 
 	utilsStruct := UtilsStruct{
-		razorUtils:    UtilsMock{},
-		keystoreUtils: KeystoreMock{},
-		cryptoUtils:   CryptoMock{},
+		razorUtils:    razorInterface.UtilsMock{},
+		keystoreUtils: razorInterface.KeystoreMock{},
+		cryptoUtils:   razorInterface.CryptoMock{},
 	}
 
 	type args struct {
@@ -109,23 +110,23 @@ func Test_importAccount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			PrivateKeyPromptMock = func() string {
+			razorInterface.PrivateKeyPromptMock = func() string {
 				return tt.args.privateKey
 			}
 
-			PasswordPromptMock = func() string {
+			razorInterface.PasswordPromptMock = func() string {
 				return tt.args.password
 			}
 
-			GetDefaultPathMock = func() (string, error) {
+			razorInterface.GetDefaultPathMock = func() (string, error) {
 				return tt.args.path, tt.args.pathErr
 			}
 
-			HexToECDSAMock = func(string) (*ecdsa.PrivateKey, error) {
+			razorInterface.HexToECDSAMock = func(string) (*ecdsa.PrivateKey, error) {
 				return tt.args.ecdsaPrivateKey, tt.args.ecdsaPrivateKeyErr
 			}
 
-			ImportECDSAMock = func(string, *ecdsa.PrivateKey, string) (accounts.Account, error) {
+			razorInterface.ImportECDSAMock = func(string, *ecdsa.PrivateKey, string) (accounts.Account, error) {
 				return tt.args.importAccount, tt.args.importAccountErr
 			}
 

@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -26,9 +27,9 @@ func TestDecreaseCommission(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 		cmdUtils:          UtilsCmdMock{},
 	}
 
@@ -85,15 +86,15 @@ func TestDecreaseCommission(t *testing.T) {
 				return tt.args.decreaseCommissionPrompt
 			}
 
-			DecreaseCommissionContractMock = func(*ethclient.Client, *bind.TransactOpts, uint8) (*Types.Transaction, error) {
+			razorInterface.DecreaseCommissionContractMock = func(*ethclient.Client, *bind.TransactOpts, uint8) (*Types.Transaction, error) {
 				return tt.args.decreaseCommissionTxn, tt.args.decreaseCommissionErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return tt.args.WaitForBlockCompletionStatus
 			}
 
@@ -120,9 +121,9 @@ func TestSetCommission(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -159,15 +160,15 @@ func TestSetCommission(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			SetCommissionContractMock = func(*ethclient.Client, *bind.TransactOpts, uint8) (*Types.Transaction, error) {
+			razorInterface.SetCommissionContractMock = func(*ethclient.Client, *bind.TransactOpts, uint8) (*Types.Transaction, error) {
 				return tt.args.setCommissionTxn, tt.args.setCommissionErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return tt.args.WaitForBlockCompletionStatus
 			}
 
@@ -200,10 +201,10 @@ func TestSetDelegation(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
-		flagSetUtils:      FlagSetMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 		cmdUtils:          UtilsCmdMock{},
 	}
 
@@ -616,55 +617,55 @@ func TestSetDelegation(t *testing.T) {
 				return tt.args.config, tt.args.configErr
 			}
 
-			AssignPasswordMock = func(set *pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(set *pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetStringStatusMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringStatusMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.status, tt.args.statusErr
 			}
 
-			GetUint8CommissionMock = func(*pflag.FlagSet) (uint8, error) {
+			razorInterface.GetUint8CommissionMock = func(*pflag.FlagSet) (uint8, error) {
 				return tt.args.commission, tt.args.commissionErr
 			}
 
-			ParseBoolMock = func(string) (bool, error) {
+			razorInterface.ParseBoolMock = func(string) (bool, error) {
 				return tt.args.parseStatus, tt.args.parseStatusErr
 			}
 
-			ConnectToClientMock = func(string2 string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string2 string) *ethclient.Client {
 				return client
 			}
 
-			GetStakerIdMock = func(*ethclient.Client, string) (uint32, error) {
+			razorInterface.GetStakerIdMock = func(*ethclient.Client, string) (uint32, error) {
 				return tt.args.stakerId, tt.args.stakerIdErr
 			}
 
-			GetStakerMock = func(*ethclient.Client, string, uint32) (bindings.StructsStaker, error) {
+			razorInterface.GetStakerMock = func(*ethclient.Client, string, uint32) (bindings.StructsStaker, error) {
 				return tt.args.staker, tt.args.stakerErr
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return txnOpts
 			}
 
-			SetDelegationAcceptanceMock = func(*ethclient.Client, *bind.TransactOpts, bool) (*Types.Transaction, error) {
+			razorInterface.SetDelegationAcceptanceMock = func(*ethclient.Client, *bind.TransactOpts, bool) (*Types.Transaction, error) {
 				return tt.args.SetDelegationAcceptanceTxn, tt.args.SetDelegationAcceptanceErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return tt.args.WaitForBlockCompletionStatus
 			}
 
-			GetUpdatedStakerMock = func(*ethclient.Client, string, uint32) (bindings.StructsStaker, error) {
+			razorInterface.GetUpdatedStakerMock = func(*ethclient.Client, string, uint32) (bindings.StructsStaker, error) {
 				return tt.args.updatedStaker, tt.args.updatedStakerErr
 			}
 

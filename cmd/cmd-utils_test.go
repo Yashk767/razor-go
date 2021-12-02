@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/pflag"
 	"math/big"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -13,7 +14,8 @@ func TestGetEpochAndState(t *testing.T) {
 	var address string
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
+		cmdUtils:   UtilsCmdMock{},
 	}
 
 	type args struct {
@@ -83,7 +85,7 @@ func TestGetEpochAndState(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			GetEpochMock = func(*ethclient.Client) (uint32, error) {
+			razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
@@ -91,11 +93,11 @@ func TestGetEpochAndState(t *testing.T) {
 				return tt.args.bufferPercent, tt.args.bufferPercentErr
 			}
 
-			GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
+			razorInterface.GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
 				return tt.args.state, tt.args.stateErr
 			}
 
-			GetStateNameMock = func(int64) string {
+			razorInterface.GetStateNameMock = func(int64) string {
 				return tt.args.stateName
 			}
 
@@ -125,7 +127,7 @@ func TestWaitForAppropriateState(t *testing.T) {
 
 	utilsStruct := UtilsStruct{
 		cmdUtils:   UtilsCmdMock{},
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 
 	type args struct {
@@ -196,7 +198,7 @@ func TestWaitForAppropriateState(t *testing.T) {
 				return tt.args.epoch, tt.args.state, tt.args.epochOrStateErr
 			}
 
-			ContainsMock = func([]int, int) bool {
+			razorInterface.ContainsMock = func([]int, int) bool {
 				return tt.args.contains
 			}
 
@@ -224,7 +226,7 @@ func TestWaitIfCommitState(t *testing.T) {
 
 	utilsStruct := UtilsStruct{
 		cmdUtils:   UtilsCmdMock{},
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 	type args struct {
 		epoch           uint32
@@ -283,8 +285,8 @@ func TestAssignAmountInWei1(t *testing.T) {
 	var flagSet *pflag.FlagSet
 
 	utilsStruct := UtilsStruct{
-		razorUtils:   UtilsMock{},
-		flagSetUtils: FlagSetMock{},
+		razorUtils:   razorInterface.UtilsMock{},
+		flagSetUtils: razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -373,23 +375,23 @@ func TestAssignAmountInWei1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetStringValueMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringValueMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.amount, tt.args.amountErr
 			}
 
-			IsFlagPassedMock = func(string) bool {
+			razorInterface.IsFlagPassedMock = func(string) bool {
 				return tt.args.isFlagPassed
 			}
 
-			GetStringPowMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringPowMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.power, tt.args.powerErr
 			}
 
-			GetFractionalAmountInWeiMock = func(*big.Int, string) (*big.Int, error) {
+			razorInterface.GetFractionalAmountInWeiMock = func(*big.Int, string) (*big.Int, error) {
 				return tt.args.fractionalAmountInWei, tt.args.fractionalAmountInWeiErr
 			}
 
-			GetAmountInWeiMock = func(*big.Int) *big.Int {
+			razorInterface.GetAmountInWeiMock = func(*big.Int) *big.Int {
 				return tt.args.amountInWei
 			}
 

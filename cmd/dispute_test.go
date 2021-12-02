@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -27,10 +28,10 @@ func TestDispute(t *testing.T) {
 	var assetId int
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
+		razorUtils:        razorInterface.UtilsMock{},
 		cmdUtils:          UtilsCmdMock{},
-		blockManagerUtils: BlockManagerMock{},
-		transactionUtils:  TransactionMock{},
+		blockManagerUtils: razorInterface.BlockManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -124,23 +125,23 @@ func TestDispute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			GetBlockManagerMock = func(*ethclient.Client) *bindings.BlockManager {
+			razorInterface.GetBlockManagerMock = func(*ethclient.Client) *bindings.BlockManager {
 				return blockManager
 			}
 
-			GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
+			razorInterface.GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
 				return tt.args.numOfStakers, tt.args.numOfStakersErr
 			}
 
-			GetVotesMock = func(*ethclient.Client, string, uint32) (bindings.StructsVote, error) {
+			razorInterface.GetVotesMock = func(*ethclient.Client, string, uint32) (bindings.StructsVote, error) {
 				return tt.args.votes, tt.args.votesErr
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return txnOpts
 			}
 
-			ContainsMock = func([]int, int) bool {
+			razorInterface.ContainsMock = func([]int, int) bool {
 				return tt.args.containsStatus
 			}
 
@@ -148,15 +149,15 @@ func TestDispute(t *testing.T) {
 
 			}
 
-			FinalizeDisputeMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint8) (*Types.Transaction, error) {
+			razorInterface.FinalizeDisputeMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint8) (*Types.Transaction, error) {
 				return tt.args.finalizeDisputeTxn, tt.args.finalizeDisputeErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return 1
 			}
 
@@ -184,11 +185,11 @@ func TestHandleDispute(t *testing.T) {
 	var epoch uint32
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
+		razorUtils:        razorInterface.UtilsMock{},
 		proposeUtils:      ProposeUtilsMock{},
 		cmdUtils:          UtilsCmdMock{},
-		blockManagerUtils: BlockManagerMock{},
-		transactionUtils:  TransactionMock{},
+		blockManagerUtils: razorInterface.BlockManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -398,11 +399,11 @@ func TestHandleDispute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			GetSortedProposedBlockIdsMock = func(*ethclient.Client, string, uint32) ([]uint8, error) {
+			razorInterface.GetSortedProposedBlockIdsMock = func(*ethclient.Client, string, uint32) ([]uint8, error) {
 				return tt.args.sortedProposedBlockIds, tt.args.sortedProposedBlockIdsErr
 			}
 
-			GetProposedBlockMock = func(*ethclient.Client, string, uint32, uint8) (bindings.StructsBlock, error) {
+			razorInterface.GetProposedBlockMock = func(*ethclient.Client, string, uint32, uint8) (bindings.StructsBlock, error) {
 				return tt.args.proposedBlock, tt.args.proposedBlockErr
 			}
 
@@ -410,19 +411,19 @@ func TestHandleDispute(t *testing.T) {
 				return tt.args.biggestInfluence, tt.args.biggestInfluenceId, tt.args.biggestInfluenceErr
 			}
 
-			DisputeBiggestInfluenceProposedMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint8, uint32) (*Types.Transaction, error) {
+			razorInterface.DisputeBiggestInfluenceProposedMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint8, uint32) (*Types.Transaction, error) {
 				return tt.args.disputeBiggestInfluenceTxn, tt.args.disputeBiggestInfluenceErr
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return txnOpts
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.Hash
 			}
 
-			WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
+			razorInterface.WaitForBlockCompletionMock = func(*ethclient.Client, string) int {
 				return 1
 			}
 
@@ -430,11 +431,11 @@ func TestHandleDispute(t *testing.T) {
 				return tt.args.medians, tt.args.mediansErr
 			}
 
-			GetActiveAssetIdsMock = func(*ethclient.Client, string, uint32) ([]uint8, error) {
+			razorInterface.GetActiveAssetIdsMock = func(*ethclient.Client, string, uint32) ([]uint8, error) {
 				return tt.args.activeAssetIds, tt.args.activeAssetIdsErr
 			}
 
-			IsEqualMock = func([]uint32, []uint32) (bool, int) {
+			razorInterface.IsEqualMock = func([]uint32, []uint32) (bool, int) {
 				return tt.args.isEqual, tt.args.iteration
 			}
 

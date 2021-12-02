@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -21,9 +22,9 @@ func Test_approve(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		tokenManagerUtils: TokenManagerMock{},
-		transactionUtils:  TransactionMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		tokenManagerUtils: razorInterface.TokenManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -135,22 +136,22 @@ func Test_approve(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetOptionsMock = func(bool, string, string) bind.CallOpts {
+			razorInterface.GetOptionsMock = func(bool, string, string) bind.CallOpts {
 				return tt.args.callOpts
 			}
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.transactOpts
 			}
 
-			AllowanceMock = func(*ethclient.Client, *bind.CallOpts, common.Address, common.Address) (*big.Int, error) {
+			razorInterface.AllowanceMock = func(*ethclient.Client, *bind.CallOpts, common.Address, common.Address) (*big.Int, error) {
 				return tt.args.allowanceAmount, tt.args.allowanceError
 			}
 
-			ApproveMock = func(*ethclient.Client, *bind.TransactOpts, common.Address, *big.Int) (*Types.Transaction, error) {
+			razorInterface.ApproveMock = func(*ethclient.Client, *bind.TransactOpts, common.Address, *big.Int) (*Types.Transaction, error) {
 				return tt.args.approveTxn, tt.args.approveError
 			}
 
-			HashMock = func(transaction *Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(transaction *Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

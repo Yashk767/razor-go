@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
+	"razor/razorInterface"
 	"reflect"
 	"testing"
 )
@@ -11,8 +12,8 @@ import (
 func Test_listAccounts(t *testing.T) {
 
 	utilsStruct := UtilsStruct{
-		razorUtils:    UtilsMock{},
-		keystoreUtils: KeystoreMock{},
+		razorUtils:    razorInterface.UtilsMock{},
+		keystoreUtils: razorInterface.KeystoreMock{},
 	}
 
 	accountsList := []accounts.Account{
@@ -59,11 +60,11 @@ func Test_listAccounts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetDefaultPathMock = func() (string, error) {
+			razorInterface.GetDefaultPathMock = func() (string, error) {
 				return tt.args.path, tt.args.pathErr
 			}
 
-			AccountsMock = func(string) []accounts.Account {
+			razorInterface.AccountsMock = func(string) []accounts.Account {
 				return tt.args.accounts
 			}
 

@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -23,8 +24,8 @@ func TestCheckCurrentStatus(t *testing.T) {
 	var assetId uint8
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		assetManagerUtils: AssetManagerMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		assetManagerUtils: razorInterface.AssetManagerMock{},
 	}
 
 	type args struct {
@@ -60,11 +61,11 @@ func TestCheckCurrentStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetOptionsMock = func(bool, string, string) bind.CallOpts {
+			razorInterface.GetOptionsMock = func(bool, string, string) bind.CallOpts {
 				return tt.args.callOpts
 			}
 
-			GetActiveStatusMock = func(*ethclient.Client, *bind.CallOpts, uint8) (bool, error) {
+			razorInterface.GetActiveStatusMock = func(*ethclient.Client, *bind.CallOpts, uint8) (bool, error) {
 				return tt.args.activeStatus, tt.args.activeStatusErr
 			}
 
@@ -96,11 +97,11 @@ func TestModifyAssetStatus(t *testing.T) {
 	var client *ethclient.Client
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		assetManagerUtils: AssetManagerMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		assetManagerUtils: razorInterface.AssetManagerMock{},
 		cmdUtils:          UtilsCmdMock{},
-		transactionUtils:  TransactionMock{},
-		flagSetUtils:      FlagSetMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -279,27 +280,27 @@ func TestModifyAssetStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetUint8AssetIdMock = func(*pflag.FlagSet) (uint8, error) {
+			razorInterface.GetUint8AssetIdMock = func(*pflag.FlagSet) (uint8, error) {
 				return tt.args.assetId, tt.args.assetIdErr
 			}
 
-			GetStringStatusMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringStatusMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.status, tt.args.statusErr
 			}
 
-			ParseBoolMock = func(string2 string) (bool, error) {
+			razorInterface.ParseBoolMock = func(string2 string) (bool, error) {
 				return tt.args.parseStatus, tt.args.parseStatusErr
 			}
 
-			PasswordPromptMock = func() string {
+			razorInterface.PasswordPromptMock = func() string {
 				return tt.args.password
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
 
@@ -307,7 +308,7 @@ func TestModifyAssetStatus(t *testing.T) {
 				return tt.args.currentStatus, tt.args.currentStatusErr
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
 
@@ -315,11 +316,11 @@ func TestModifyAssetStatus(t *testing.T) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
-			SetCollectionStatusMock = func(*ethclient.Client, *bind.TransactOpts, bool, uint8) (*Types.Transaction, error) {
+			razorInterface.SetCollectionStatusMock = func(*ethclient.Client, *bind.TransactOpts, bool, uint8) (*Types.Transaction, error) {
 				return tt.args.SetCollectionStatus, tt.args.SetAssetStatusErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

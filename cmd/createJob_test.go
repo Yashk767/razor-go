@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -26,10 +27,10 @@ func Test_createJob(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		assetManagerUtils: AssetManagerMock{},
-		transactionUtils:  TransactionMock{},
-		flagSetUtils:      FlagSetMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		assetManagerUtils: razorInterface.AssetManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 	}
 
 	type args struct {
@@ -200,47 +201,47 @@ func Test_createJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssignPasswordMock = func(*pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(*pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetStringNameMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringNameMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.name, tt.args.nameErr
 			}
 
-			GetStringUrlMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringUrlMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.url, tt.args.urlErr
 			}
 
-			GetStringSelectorMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringSelectorMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.selector, tt.args.selectorErr
 			}
 
-			GetInt8PowerMock = func(*pflag.FlagSet) (int8, error) {
+			razorInterface.GetInt8PowerMock = func(*pflag.FlagSet) (int8, error) {
 				return tt.args.power, tt.args.powerErr
 			}
 
-			GetUint8WeightMock = func(*pflag.FlagSet) (uint8, error) {
+			razorInterface.GetUint8WeightMock = func(*pflag.FlagSet) (uint8, error) {
 				return tt.args.weight, tt.args.weightErr
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
 
-			CreateJobMock = func(*ethclient.Client, *bind.TransactOpts, uint8, int8, uint8, string, string, string) (*Types.Transaction, error) {
+			razorInterface.CreateJobMock = func(*ethclient.Client, *bind.TransactOpts, uint8, int8, uint8, string, string, string) (*Types.Transaction, error) {
 				return tt.args.createJobTxn, tt.args.createJobErr
 			}
 
-			HashMock = func(transaction *Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(transaction *Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

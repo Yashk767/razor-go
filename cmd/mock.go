@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	Types "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/pflag"
 	"math/big"
@@ -19,13 +18,7 @@ var WaitForAppropriateStateMock func(*ethclient.Client, string, string, UtilsStr
 
 var WaitIfCommitStateMock func(*ethclient.Client, string, string, UtilsStruct) (uint32, error)
 
-var AssignPasswordMock func(*pflag.FlagSet) string
-
 var AssignAmountInWeiMock func(flagSet *pflag.FlagSet, utilsStruct UtilsStruct) (*big.Int, error)
-
-var ConnectToClientMock func(string) *ethclient.Client
-
-var HashMock func(*Types.Transaction) common.Hash
 
 var getBiggestInfluenceAndIdMock func(*ethclient.Client, string, uint32, UtilsStruct) (*big.Int, uint32, error)
 
@@ -64,6 +57,10 @@ var DecreaseCommissionMock func(*ethclient.Client, uint32, *bind.TransactOpts, u
 var DecreaseCommissionPromptMock func() bool
 
 var WithdrawMock func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, UtilsStruct) (common.Hash, error)
+
+var GetConfigDataMock func() (types.Configurations, error)
+
+var getBufferPercentMock func() (int32, error)
 
 func (proposeUtilsMock ProposeUtilsMock) getBiggestInfluenceAndId(client *ethclient.Client, address string, epoch uint32, utilsStruct UtilsStruct) (*big.Int, uint32, error) {
 	return getBiggestInfluenceAndIdMock(client, address, epoch, utilsStruct)
@@ -151,4 +148,12 @@ func (utilsCmdMock UtilsCmdMock) withdrawFunds(client *ethclient.Client, account
 
 func (utilsCmdMock UtilsCmdMock) claimBounty(config types.Configurations, client *ethclient.Client, redeemBountyInput types.RedeemBountyInput, utilsStruct UtilsStruct) (common.Hash, error) {
 	return claimBountyMock(config, client, redeemBountyInput, utilsStruct)
+}
+
+func (utilsCmdMock UtilsCmdMock) GetConfigData() (types.Configurations, error) {
+	return GetConfigDataMock()
+}
+
+func (utilsCmdMock UtilsCmdMock) getBufferPercent() (int32, error) {
+	return getBufferPercentMock()
 }

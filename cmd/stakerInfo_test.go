@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -16,13 +17,13 @@ func TestUtilsStruct_GetStakerInfo(t *testing.T) {
 	stake, _ := new(big.Int).SetString("10000000000000000000000", 10)
 
 	type fields struct {
-		razorUtils        UtilsMock
-		stakeManagerUtils StakeManagerMock
+		razorUtils        razorInterface.UtilsMock
+		stakeManagerUtils razorInterface.StakeManagerMock
 	}
 
 	testUtils := fields{
-		razorUtils:        UtilsMock{},
-		stakeManagerUtils: StakeManagerMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
 	}
 
 	type args struct {
@@ -212,23 +213,23 @@ func TestUtilsStruct_GetStakerInfo(t *testing.T) {
 				stakeManagerUtils: tt.fields.stakeManagerUtils,
 			}
 
-			GetOptionsMock = func(bool, string, string) bind.CallOpts {
+			razorInterface.GetOptionsMock = func(bool, string, string) bind.CallOpts {
 				return tt.args.callOpts
 			}
 
-			StakerInfoMock = func(*ethclient.Client, *bind.CallOpts, uint32) (types.Staker, error) {
+			razorInterface.StakerInfoMock = func(*ethclient.Client, *bind.CallOpts, uint32) (types.Staker, error) {
 				return tt.args.stakerInfo, tt.args.stakerInfoErr
 			}
 
-			GetMaturityMock = func(*ethclient.Client, *bind.CallOpts, uint32) (uint16, error) {
+			razorInterface.GetMaturityMock = func(*ethclient.Client, *bind.CallOpts, uint32) (uint16, error) {
 				return tt.args.maturity, tt.args.maturityErr
 			}
 
-			GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
+			razorInterface.GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
 				return tt.args.influence, tt.args.influenceErr
 			}
 
-			GetEpochMock = func(*ethclient.Client) (uint32, error) {
+			razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 

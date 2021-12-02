@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -20,9 +21,9 @@ func Test_delegate(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		transactionUtils:  TransactionMock{},
-		stakeManagerUtils: StakeManagerMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
 	}
 
 	var txnArgs types.TransactionOptions
@@ -88,23 +89,23 @@ func Test_delegate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetAmountInDecimalMock = func(*big.Int) *big.Float {
+			razorInterface.GetAmountInDecimalMock = func(*big.Int) *big.Float {
 				return tt.args.amount
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
 
-			GetEpochMock = func(client *ethclient.Client) (uint32, error) {
+			razorInterface.GetEpochMock = func(client *ethclient.Client) (uint32, error) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
-			DelegateMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, *big.Int) (*Types.Transaction, error) {
+			razorInterface.DelegateMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint32, *big.Int) (*Types.Transaction, error) {
 				return tt.args.delegateTxn, tt.args.delegateErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

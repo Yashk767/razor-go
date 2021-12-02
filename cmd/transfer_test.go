@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -26,10 +27,10 @@ func Test_transfer(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(31337))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		transactionUtils:  TransactionMock{},
-		tokenManagerUtils: TokenManagerMock{},
-		flagSetUtils:      FlagSetMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		tokenManagerUtils: razorInterface.TokenManagerMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 		cmdUtils:          UtilsCmdMock{},
 	}
 
@@ -176,40 +177,40 @@ func Test_transfer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssignPasswordMock = func(set *pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(set *pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetStringFromMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringFromMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.from, tt.args.fromErr
 			}
 
-			GetStringToMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringToMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.to, tt.args.toErr
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
-			FetchBalanceMock = func(*ethclient.Client, string) (*big.Int, error) {
+			razorInterface.FetchBalanceMock = func(*ethclient.Client, string) (*big.Int, error) {
 				return tt.args.balance, tt.args.balanceErr
 			}
 			AssignAmountInWeiMock = func(*pflag.FlagSet, UtilsStruct) (*big.Int, error) {
 				return tt.args.amount, tt.args.amountErr
 			}
-			CheckAmountAndBalanceMock = func(*big.Int, *big.Int) *big.Int {
+			razorInterface.CheckAmountAndBalanceMock = func(*big.Int, *big.Int) *big.Int {
 				return tt.args.amount
 			}
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
-			GetAmountInDecimalMock = func(*big.Int) *big.Float {
+			razorInterface.GetAmountInDecimalMock = func(*big.Int) *big.Float {
 				return tt.args.decimalAmount
 			}
-			TransferMock = func(*ethclient.Client, *bind.TransactOpts, common.Address, *big.Int) (*Types.Transaction, error) {
+			razorInterface.TransferMock = func(*ethclient.Client, *bind.TransactOpts, common.Address, *big.Int) (*Types.Transaction, error) {
 				return tt.args.transferTxn, tt.args.transferErr
 			}
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.transferHash
 			}
 

@@ -10,6 +10,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"reflect"
 	"testing"
 
@@ -38,10 +39,10 @@ func TestPropose(t *testing.T) {
 	copy(randaoHashBytes32[:], randaoHash)
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
+		razorUtils:        razorInterface.UtilsMock{},
 		proposeUtils:      ProposeUtilsMock{},
-		blockManagerUtils: BlockManagerMock{},
-		transactionUtils:  TransactionMock{},
+		blockManagerUtils: razorInterface.BlockManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -390,15 +391,15 @@ func TestPropose(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
+		razorInterface.GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
 			return tt.args.state, tt.args.stateErr
 		}
 
-		GetStakerMock = func(*ethclient.Client, string, uint32) (bindings.StructsStaker, error) {
+		razorInterface.GetStakerMock = func(*ethclient.Client, string, uint32) (bindings.StructsStaker, error) {
 			return tt.args.staker, tt.args.stakerErr
 		}
 
-		GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
+		razorInterface.GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
 			return tt.args.numStakers, tt.args.numStakerErr
 		}
 
@@ -406,7 +407,7 @@ func TestPropose(t *testing.T) {
 			return tt.args.biggestInfluence, tt.args.biggestInfluenceId, tt.args.biggestInfluenceErr
 		}
 
-		GetRandaoHashMock = func(*ethclient.Client, string) ([32]byte, error) {
+		razorInterface.GetRandaoHashMock = func(*ethclient.Client, string) ([32]byte, error) {
 			return tt.args.randaoHash, tt.args.randaoHashErr
 		}
 
@@ -414,15 +415,15 @@ func TestPropose(t *testing.T) {
 			return tt.args.iteration
 		}
 
-		GetMaxAltBlocksMock = func(*ethclient.Client, string) (uint8, error) {
+		razorInterface.GetMaxAltBlocksMock = func(*ethclient.Client, string) (uint8, error) {
 			return tt.args.maxAltBlocks, tt.args.maxAltBlocksErr
 		}
 
-		GetNumberOfProposedBlocksMock = func(*ethclient.Client, string, uint32) (uint8, error) {
+		razorInterface.GetNumberOfProposedBlocksMock = func(*ethclient.Client, string, uint32) (uint8, error) {
 			return tt.args.numOfProposedBlocks, tt.args.numOfProposedBlocksErr
 		}
 
-		GetProposedBlockMock = func(*ethclient.Client, string, uint32, uint8) (bindings.StructsBlock, error) {
+		razorInterface.GetProposedBlockMock = func(*ethclient.Client, string, uint32, uint8) (bindings.StructsBlock, error) {
 			return tt.args.lastProposedBlockStruct, tt.args.lastProposedBlockStructErr
 		}
 
@@ -430,15 +431,15 @@ func TestPropose(t *testing.T) {
 			return tt.args.medians, tt.args.mediansErr
 		}
 
-		GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+		razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 			return tt.args.txnOpts
 		}
 
-		ProposeMock = func(*ethclient.Client, *bind.TransactOpts, uint32, []uint32, *big.Int, uint32) (*Types.Transaction, error) {
+		razorInterface.ProposeMock = func(*ethclient.Client, *bind.TransactOpts, uint32, []uint32, *big.Int, uint32) (*Types.Transaction, error) {
 			return tt.args.proposeTxn, tt.args.proposeErr
 		}
 
-		HashMock = func(*Types.Transaction) common.Hash {
+		razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 			return tt.args.hash
 		}
 
@@ -466,7 +467,7 @@ func Test_getBiggestInfluenceAndId(t *testing.T) {
 	var epoch uint32
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 
 	type args struct {
@@ -519,11 +520,11 @@ func Test_getBiggestInfluenceAndId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
+			razorInterface.GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
 				return tt.args.numOfStakers, tt.args.numOfStakersErr
 			}
 
-			GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
+			razorInterface.GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
 				return tt.args.influence, tt.args.influenceErr
 			}
 
@@ -555,7 +556,7 @@ func Test_getIteration(t *testing.T) {
 
 	utilsStruct := UtilsStruct{
 		proposeUtils: ProposeUtilsMock{},
-		razorUtils:   UtilsMock{},
+		razorUtils:   razorInterface.UtilsMock{},
 	}
 
 	type args struct {
@@ -601,7 +602,7 @@ func TestMakeBlock(t *testing.T) {
 	rogueModeMedian := big.NewInt(int64(randMath.Intn(10000000)))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:   UtilsMock{},
+		razorUtils:   razorInterface.UtilsMock{},
 		proposeUtils: ProposeUtilsMock{},
 	}
 
@@ -720,11 +721,11 @@ func TestMakeBlock(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetNumActiveAssetsMock = func(*ethclient.Client, string) (*big.Int, error) {
+			razorInterface.GetNumActiveAssetsMock = func(*ethclient.Client, string) (*big.Int, error) {
 				return tt.args.numAssets, tt.args.numAssetsErr
 			}
 
-			GetEpochMock = func(*ethclient.Client) (uint32, error) {
+			razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
@@ -732,7 +733,7 @@ func TestMakeBlock(t *testing.T) {
 				return tt.args.sortedVotes, tt.args.sortedVotesErr
 			}
 
-			GetTotalInfluenceRevealedMock = func(*ethclient.Client, string, uint32) (*big.Int, error) {
+			razorInterface.GetTotalInfluenceRevealedMock = func(*ethclient.Client, string, uint32) (*big.Int, error) {
 				return tt.args.totalInfluenceRevealed, tt.args.totalInfluenceRevealedErr
 			}
 
@@ -740,7 +741,7 @@ func TestMakeBlock(t *testing.T) {
 				return tt.args.influencedMedian
 			}
 
-			ConvertBigIntArrayToUint32ArrayMock = func([]*big.Int) []uint32 {
+			razorInterface.ConvertBigIntArrayToUint32ArrayMock = func([]*big.Int) []uint32 {
 				return tt.args.mediansInUint32
 			}
 
@@ -769,7 +770,7 @@ func Test_getSortedVotes(t *testing.T) {
 	var assetId uint8
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 
 	type args struct {
@@ -876,19 +877,19 @@ func Test_getSortedVotes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
+			razorInterface.GetNumberOfStakersMock = func(*ethclient.Client, string) (uint32, error) {
 				return tt.args.numberOfStakers, tt.args.numberOfStakersErr
 			}
 
-			GetEpochLastRevealedMock = func(*ethclient.Client, string, uint32) (uint32, error) {
+			razorInterface.GetEpochLastRevealedMock = func(*ethclient.Client, string, uint32) (uint32, error) {
 				return tt.args.epochLastRevealed, tt.args.epochLastRevealedErr
 			}
 
-			GetVoteValueMock = func(*ethclient.Client, string, uint8, uint32) (*big.Int, error) {
+			razorInterface.GetVoteValueMock = func(*ethclient.Client, string, uint8, uint32) (*big.Int, error) {
 				return tt.args.vote, tt.args.voteErr
 			}
 
-			GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
+			razorInterface.GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
 				return tt.args.influence, tt.args.influenceErr
 			}
 
@@ -962,7 +963,7 @@ func Test_isElectedProposer(t *testing.T) {
 	var client *ethclient.Client
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 
 	randaoHash := []byte{142, 170, 157, 83, 109, 43, 34, 152, 21, 154, 159, 12, 195, 119, 50, 186, 218, 57, 39, 173, 228, 135, 20, 100, 149, 27, 169, 158, 34, 113, 66, 64}
@@ -1063,7 +1064,7 @@ func Test_isElectedProposer(t *testing.T) {
 	}
 	for _, tt := range tests {
 
-		GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
+		razorInterface.GetInfluenceSnapshotMock = func(*ethclient.Client, string, uint32, uint32) (*big.Int, error) {
 			return tt.args.influenceSnapshot, tt.args.influenceSnapshotErr
 		}
 

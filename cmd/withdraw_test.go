@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 	"time"
 )
@@ -27,10 +28,10 @@ func Test_withdrawFunds(t *testing.T) {
 	var stakerId uint32
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
+		razorUtils:        razorInterface.UtilsMock{},
 		cmdUtils:          UtilsCmdMock{},
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -214,23 +215,23 @@ func Test_withdrawFunds(t *testing.T) {
 	}
 	for _, tt := range tests {
 
-		GetLockMock = func(*ethclient.Client, string, uint32) (types.Locks, error) {
+		razorInterface.GetLockMock = func(*ethclient.Client, string, uint32) (types.Locks, error) {
 			return tt.args.lock, tt.args.lockErr
 		}
 
-		GetWithdrawReleasePeriodMock = func(*ethclient.Client, string) (uint8, error) {
+		razorInterface.GetWithdrawReleasePeriodMock = func(*ethclient.Client, string) (uint8, error) {
 			return tt.args.withdrawReleasePeriod, tt.args.withdrawReleasePeriodErr
 		}
 
-		GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+		razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 			return tt.args.txnOpts
 		}
 
-		GetEpochMock = func(*ethclient.Client) (uint32, error) {
+		razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 			return tt.args.epoch, tt.args.epochErr
 		}
 
-		GetUpdatedEpochMock = func(*ethclient.Client) (uint32, error) {
+		razorInterface.GetUpdatedEpochMock = func(*ethclient.Client) (uint32, error) {
 			return tt.args.updatedEpoch, tt.args.updatedEpochErr
 		}
 
@@ -238,7 +239,7 @@ func Test_withdrawFunds(t *testing.T) {
 			return tt.args.withdrawHash, tt.args.withdrawErr
 		}
 
-		SleepMock = func(time.Duration) {
+		razorInterface.SleepMock = func(time.Duration) {
 
 		}
 
@@ -267,8 +268,8 @@ func Test_withdraw(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		stakeManagerUtils: StakeManagerMock{},
-		transactionUtils:  TransactionMock{},
+		stakeManagerUtils: razorInterface.StakeManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
 	}
 
 	var client *ethclient.Client
@@ -309,11 +310,11 @@ func Test_withdraw(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			WithdrawContractMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint32) (*Types.Transaction, error) {
+			razorInterface.WithdrawContractMock = func(*ethclient.Client, *bind.TransactOpts, uint32, uint32) (*Types.Transaction, error) {
 				return tt.args.withdrawTxn, tt.args.withdrawErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

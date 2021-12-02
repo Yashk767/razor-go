@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"reflect"
 	"testing"
 )
@@ -27,9 +28,9 @@ func TestCommit(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:       UtilsMock{},
-		voteManagerUtils: VoteManagerMock{},
-		transactionUtils: TransactionMock{},
+		razorUtils:       razorInterface.UtilsMock{},
+		voteManagerUtils: razorInterface.VoteManagerMock{},
+		transactionUtils: razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -110,23 +111,23 @@ func TestCommit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
+			razorInterface.GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
 				return tt.args.state, tt.args.stateErr
 			}
 
-			GetEpochMock = func(*ethclient.Client) (uint32, error) {
+			razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
 
-			CommitMock = func(*ethclient.Client, *bind.TransactOpts, uint32, [32]byte) (*Types.Transaction, error) {
+			razorInterface.CommitMock = func(*ethclient.Client, *bind.TransactOpts, uint32, [32]byte) (*Types.Transaction, error) {
 				return tt.args.commitTxn, tt.args.commitErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
@@ -153,7 +154,7 @@ func TestHandleCommitState(t *testing.T) {
 	var epoch uint32
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 
 	type args struct {
@@ -186,7 +187,7 @@ func TestHandleCommitState(t *testing.T) {
 	}
 	for _, tt := range tests {
 
-		GetActiveAssetsDataMock = func(*ethclient.Client, string, uint32) ([]*big.Int, error) {
+		razorInterface.GetActiveAssetsDataMock = func(*ethclient.Client, string, uint32) ([]*big.Int, error) {
 			return tt.args.data, tt.args.dataErr
 		}
 

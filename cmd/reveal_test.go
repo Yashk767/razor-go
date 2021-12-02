@@ -13,6 +13,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func TestHandleRevealState(t *testing.T) {
 	}
 
 	utilsStruct := UtilsStruct{
-		razorUtils: UtilsMock{},
+		razorUtils: razorInterface.UtilsMock{},
 	}
 
 	type args struct {
@@ -68,7 +69,7 @@ func TestHandleRevealState(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			GetEpochLastCommittedMock = func(*ethclient.Client, string, uint32) (uint32, error) {
+			razorInterface.GetEpochLastCommittedMock = func(*ethclient.Client, string, uint32) (uint32, error) {
 				return tt.args.epochLastCommitted, tt.args.epochLastCommittedErr
 			}
 
@@ -99,9 +100,9 @@ func TestReveal(t *testing.T) {
 	txnOpts, _ := bind.NewKeyedTransactorWithChainID(privateKey, big.NewInt(1))
 
 	utilsStruct := UtilsStruct{
-		razorUtils:       UtilsMock{},
-		voteManagerUtils: VoteManagerMock{},
-		transactionUtils: TransactionMock{},
+		razorUtils:       razorInterface.UtilsMock{},
+		voteManagerUtils: razorInterface.VoteManagerMock{},
+		transactionUtils: razorInterface.TransactionMock{},
 	}
 
 	type args struct {
@@ -231,31 +232,31 @@ func TestReveal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
+			razorInterface.GetDelayedStateMock = func(*ethclient.Client, int32) (int64, error) {
 				return tt.args.state, tt.args.stateErr
 			}
 
-			GetEpochMock = func(*ethclient.Client) (uint32, error) {
+			razorInterface.GetEpochMock = func(*ethclient.Client) (uint32, error) {
 				return tt.args.epoch, tt.args.epochErr
 			}
 
-			GetCommitmentsMock = func(*ethclient.Client, string) ([32]byte, error) {
+			razorInterface.GetCommitmentsMock = func(*ethclient.Client, string) ([32]byte, error) {
 				return tt.args.commitments, tt.args.commitmentsErr
 			}
 
-			AllZeroMock = func([32]byte) bool {
+			razorInterface.AllZeroMock = func([32]byte) bool {
 				return tt.args.allZeroStatus
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
 
-			RevealMock = func(*ethclient.Client, *bind.TransactOpts, uint32, []*big.Int, [32]byte) (*Types.Transaction, error) {
+			razorInterface.RevealMock = func(*ethclient.Client, *bind.TransactOpts, uint32, []*big.Int, [32]byte) (*Types.Transaction, error) {
 				return tt.args.revealTxn, tt.args.revealErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 

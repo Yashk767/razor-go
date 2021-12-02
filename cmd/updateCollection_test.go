@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 	"testing"
 )
 
@@ -26,10 +27,10 @@ func Test_updateCollection(t *testing.T) {
 	var WaitIfCommitStateStatus uint32
 
 	utilsStruct := UtilsStruct{
-		razorUtils:        UtilsMock{},
-		assetManagerUtils: AssetManagerMock{},
-		transactionUtils:  TransactionMock{},
-		flagSetUtils:      FlagSetMock{},
+		razorUtils:        razorInterface.UtilsMock{},
+		assetManagerUtils: razorInterface.AssetManagerMock{},
+		transactionUtils:  razorInterface.TransactionMock{},
+		flagSetUtils:      razorInterface.FlagSetMock{},
 		cmdUtils:          UtilsCmdMock{},
 	}
 
@@ -244,47 +245,47 @@ func Test_updateCollection(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AssignPasswordMock = func(*pflag.FlagSet) string {
+			razorInterface.AssignPasswordMock = func(*pflag.FlagSet) string {
 				return tt.args.password
 			}
 
-			GetUint8CollectionIdMock = func(*pflag.FlagSet) (uint8, error) {
+			razorInterface.GetUint8CollectionIdMock = func(*pflag.FlagSet) (uint8, error) {
 				return tt.args.collectionId, tt.args.collectionIdErr
 			}
 
-			GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
+			razorInterface.GetStringAddressMock = func(*pflag.FlagSet) (string, error) {
 				return tt.args.address, tt.args.addressErr
 			}
 
-			GetUintSliceJobIdsMock = func(*pflag.FlagSet) ([]uint, error) {
+			razorInterface.GetUintSliceJobIdsMock = func(*pflag.FlagSet) ([]uint, error) {
 				return tt.args.jobId, tt.args.jobIdErr
 			}
 
-			GetUint32AggregationMock = func(*pflag.FlagSet) (uint32, error) {
+			razorInterface.GetUint32AggregationMock = func(*pflag.FlagSet) (uint32, error) {
 				return tt.args.aggregation, tt.args.aggregationErr
 			}
 
-			GetInt8PowerMock = func(*pflag.FlagSet) (int8, error) {
+			razorInterface.GetInt8PowerMock = func(*pflag.FlagSet) (int8, error) {
 				return tt.args.power, tt.args.powerErr
 			}
 
-			ConnectToClientMock = func(string) *ethclient.Client {
+			razorInterface.ConnectToClientMock = func(string) *ethclient.Client {
 				return client
 			}
 
-			GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
+			razorInterface.GetTxnOptsMock = func(types.TransactionOptions) *bind.TransactOpts {
 				return tt.args.txnOpts
 			}
 
-			ConvertUintArrayToUint8ArrayMock = func([]uint) []uint8 {
+			razorInterface.ConvertUintArrayToUint8ArrayMock = func([]uint) []uint8 {
 				return tt.args.jobIdUint8
 			}
 
-			UpdateCollectionMock = func(*ethclient.Client, *bind.TransactOpts, uint8, uint32, int8, []uint8) (*Types.Transaction, error) {
+			razorInterface.UpdateCollectionMock = func(*ethclient.Client, *bind.TransactOpts, uint8, uint32, int8, []uint8) (*Types.Transaction, error) {
 				return tt.args.updateCollectionTxn, tt.args.updateCollectionErr
 			}
 
-			HashMock = func(*Types.Transaction) common.Hash {
+			razorInterface.HashMock = func(*Types.Transaction) common.Hash {
 				return tt.args.hash
 			}
 
