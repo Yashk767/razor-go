@@ -9,9 +9,10 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 )
 
-var voteManagerUtils voteManagerInterface
+var voteManagerUtils razorInterface.VoteManagerInterface
 
 func (utilsStruct UtilsStruct) HandleCommitState(client *ethclient.Client, address string, epoch uint32) ([]*big.Int, error) {
 	data, err := utilsStruct.razorUtils.GetActiveAssetsData(client, address, epoch)

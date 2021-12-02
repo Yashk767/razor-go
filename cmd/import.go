@@ -4,11 +4,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
+	"razor/razorInterface"
 	"razor/utils"
 	"strings"
 )
 
-var cryptoUtils cryptoInterface
+var cryptoUtils razorInterface.CryptoInterface
 
 var importCmd = &cobra.Command{
 	Use:   "import",
@@ -55,9 +56,9 @@ func (utilsStruct UtilsStruct) importAccount() (accounts.Account, error) {
 }
 
 func init() {
-	razorUtils = Utils{}
-	keystoreUtils = KeystoreUtils{}
-	cryptoUtils = CryptoUtils{}
+	razorUtils = razorInterface.Utils{}
+	keystoreUtils = razorInterface.KeystoreUtils{}
+	cryptoUtils = razorInterface.CryptoUtils{}
 
 	rootCmd.AddCommand(importCmd)
 }

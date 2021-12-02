@@ -7,6 +7,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 )
 
@@ -90,10 +91,10 @@ func (utilsStruct UtilsStruct) updateCollection(flagSet *pflag.FlagSet, config t
 }
 
 func init() {
-	razorUtils = Utils{}
-	assetManagerUtils = AssetManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	assetManagerUtils = razorInterface.AssetManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 	cmdUtils = UtilsCmd{}
 
 	rootCmd.AddCommand(updateCollectionCmd)

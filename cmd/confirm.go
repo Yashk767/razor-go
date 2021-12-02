@@ -3,11 +3,12 @@ package cmd
 import (
 	"razor/core"
 	"razor/core/types"
+	"razor/razorInterface"
 
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var blockManagerUtils blockManagerInterface
+var blockManagerUtils razorInterface.BlockManagerInterface
 
 func (utilsStruct UtilsStruct) ClaimBlockReward(options types.TransactionOptions) (common.Hash, error) {
 	log.Info("Claiming block reward...")

@@ -7,6 +7,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 )
 
@@ -91,10 +92,10 @@ func (utilsStruct UtilsStruct) updateJob(flagSet *pflag.FlagSet, config types.Co
 func init() {
 	rootCmd.AddCommand(updateJobCmd)
 
-	razorUtils = Utils{}
-	assetManagerUtils = AssetManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	assetManagerUtils = razorInterface.AssetManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 	cmdUtils = UtilsCmd{}
 
 	var (

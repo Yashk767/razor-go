@@ -3,10 +3,11 @@ package cmd
 import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/spf13/cobra"
+	"razor/razorInterface"
 	"razor/utils"
 )
 
-var keystoreUtils keystoreInterface
+var keystoreUtils razorInterface.KeystoreInterface
 
 var listAccountsCmd = &cobra.Command{
 	Use:   "listAccounts",
@@ -39,7 +40,7 @@ func (utilsStruct UtilsStruct) listAccounts() ([]accounts.Account, error) {
 }
 
 func init() {
-	razorUtils = Utils{}
-	keystoreUtils = KeystoreUtils{}
+	razorUtils = razorInterface.Utils{}
+	keystoreUtils = razorInterface.KeystoreUtils{}
 	rootCmd.AddCommand(listAccountsCmd)
 }

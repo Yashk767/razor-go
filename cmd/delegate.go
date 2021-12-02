@@ -5,6 +5,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 
 	"github.com/spf13/cobra"
@@ -90,10 +91,10 @@ func (utilsStruct UtilsStruct) delegate(txnArgs types.TransactionOptions, staker
 }
 
 func init() {
-	razorUtils = Utils{}
-	transactionUtils = TransactionUtils{}
-	stakeManagerUtils = StakeManagerUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 
 	rootCmd.AddCommand(delegateCmd)
 	var (

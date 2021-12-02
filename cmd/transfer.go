@@ -4,6 +4,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 
 	"github.com/spf13/pflag"
@@ -87,10 +88,10 @@ func (utilsStruct UtilsStruct) transfer(flagSet *pflag.FlagSet, config types.Con
 }
 
 func init() {
-	razorUtils = Utils{}
-	tokenManagerUtils = TokenManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	tokenManagerUtils = razorInterface.TokenManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 	cmdUtils = UtilsCmd{}
 
 	rootCmd.AddCommand(transferCmd)

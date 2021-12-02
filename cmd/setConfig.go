@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"razor/razorInterface"
 	"razor/utils"
 )
 
@@ -101,8 +102,8 @@ func (utilsStruct UtilsStruct) SetConfig(flagSet *pflag.FlagSet) error {
 
 func init() {
 
-	razorUtils = Utils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 
 	rootCmd.AddCommand(setConfig)
 

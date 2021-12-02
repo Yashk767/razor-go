@@ -5,15 +5,16 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 
 	"github.com/spf13/cobra"
 )
 
-var razorUtils utilsInterface
-var tokenManagerUtils tokenManagerInterface
-var transactionUtils transactionInterface
-var stakeManagerUtils stakeManagerInterface
+var razorUtils razorInterface.UtilsInterface
+var tokenManagerUtils razorInterface.TokenManagerInterface
+var transactionUtils razorInterface.TransactionInterface
+var stakeManagerUtils razorInterface.StakeManagerInterface
 
 //var utilsStructInterface structUtilsInterface
 
@@ -93,11 +94,11 @@ func (utilsStruct UtilsStruct) stakeCoins(txnArgs types.TransactionOptions) (com
 }
 
 func init() {
-	razorUtils = Utils{}
-	tokenManagerUtils = TokenManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	stakeManagerUtils = StakeManagerUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	tokenManagerUtils = razorInterface.TokenManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 
 	rootCmd.AddCommand(stakeCmd)
 	var (

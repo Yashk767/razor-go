@@ -4,6 +4,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -104,11 +105,11 @@ func (utilsStruct UtilsStruct) ModifyAssetStatus(flagSet *pflag.FlagSet, config 
 
 func init() {
 
-	razorUtils = Utils{}
+	razorUtils = razorInterface.Utils{}
 	cmdUtils = UtilsCmd{}
-	flagSetUtils = FlagSetUtils{}
-	assetManagerUtils = AssetManagerUtils{}
-	transactionUtils = TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
+	assetManagerUtils = razorInterface.AssetManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
 
 	rootCmd.AddCommand(modifyAssetStatusCmd)
 

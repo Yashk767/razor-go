@@ -5,10 +5,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"razor/razorInterface"
 	"razor/utils"
 )
 
-var accountUtils accountInterface
+var accountUtils razorInterface.AccountInterface
 
 var createCmd = &cobra.Command{
 	Use:   "create",
@@ -41,8 +42,8 @@ func (utilsStruct UtilsStruct) Create(flagSet *pflag.FlagSet) (accounts.Account,
 }
 
 func init() {
-	razorUtils = Utils{}
-	accountUtils = AccountUtils{}
+	razorUtils = razorInterface.Utils{}
+	accountUtils = razorInterface.AccountUtils{}
 
 	rootCmd.AddCommand(createCmd)
 

@@ -6,13 +6,14 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 
 	"github.com/spf13/cobra"
 )
 
-var assetManagerUtils assetManagerInterface
-var flagSetUtils flagSetInterface
+var assetManagerUtils razorInterface.AssetManagerInterface
+var flagSetUtils razorInterface.FlagSetInterface
 
 var createJobCmd = &cobra.Command{
 	Use:   "createJob",
@@ -98,10 +99,10 @@ func (utilsStruct UtilsStruct) createJob(flagSet *pflag.FlagSet, config types.Co
 
 func init() {
 
-	razorUtils = Utils{}
-	assetManagerUtils = AssetManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	assetManagerUtils = razorInterface.AssetManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 
 	rootCmd.AddCommand(createJobCmd)
 

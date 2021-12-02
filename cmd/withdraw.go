@@ -7,6 +7,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 	"time"
 
@@ -131,9 +132,9 @@ func withdraw(client *ethclient.Client, txnOpts *bind.TransactOpts, epoch uint32
 
 func init() {
 
-	razorUtils = Utils{}
-	transactionUtils = TransactionUtils{}
-	stakeManagerUtils = StakeManagerUtils{}
+	razorUtils = razorInterface.Utils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
 	cmdUtils = UtilsCmd{}
 
 	rootCmd.AddCommand(withdrawCmd)

@@ -5,6 +5,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 	"strings"
 
@@ -41,7 +42,7 @@ Example:
 
 func (utilsStruct UtilsStruct) SetDelegation(flagSet *pflag.FlagSet) error {
 
-	config, err := utilsStruct.razorUtils.GetConfigData()
+	config, err := utilsStruct.cmdUtils.GetConfigData()
 	if err != nil {
 		log.Error("Error in getting config")
 		return err
@@ -176,10 +177,10 @@ func DecreaseCommissionPrompt() bool {
 
 func init() {
 
-	razorUtils = Utils{}
-	stakeManagerUtils = StakeManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 	cmdUtils = UtilsCmd{}
 
 	rootCmd.AddCommand(setDelegationCmd)

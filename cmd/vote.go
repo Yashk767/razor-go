@@ -12,6 +12,7 @@ import (
 	"razor/core/types"
 	"razor/path"
 	jobManager "razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 	"strings"
 	"time"
@@ -384,12 +385,12 @@ func AutoUnstakeAndWithdraw(client *ethclient.Client, account types.Account, amo
 
 func init() {
 
-	razorUtils = Utils{}
+	razorUtils = razorInterface.Utils{}
 	proposeUtils = ProposeUtils{}
-	voteManagerUtils = VoteManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	blockManagerUtils = BlockManagerUtils{}
-	transactionUtils = TransactionUtils{}
+	voteManagerUtils = razorInterface.VoteManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	blockManagerUtils = razorInterface.BlockManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
 	proposeUtils = ProposeUtils{}
 	cmdUtils = UtilsCmd{}
 

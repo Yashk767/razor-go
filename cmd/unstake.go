@@ -8,6 +8,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 	"time"
 
@@ -37,7 +38,7 @@ func initialiseUnstake(cmd *cobra.Command, args []string) {
 }
 
 func (utilsStruct UtilsStruct) executeUnstake(flagSet *pflag.FlagSet) {
-	config, err := utilsStruct.razorUtils.GetConfigData()
+	config, err := utilsStruct.cmdUtils.GetConfigData()
 	utils.CheckError("Error in getting config: ", err)
 
 	password := utilsStruct.razorUtils.AssignPassword(flagSet)
@@ -142,11 +143,11 @@ func AutoWithdraw(txnArgs types.TransactionOptions, stakerId uint32, utilsStruct
 
 func init() {
 
-	razorUtils = Utils{}
-	transactionUtils = TransactionUtils{}
-	stakeManagerUtils = StakeManagerUtils{}
+	razorUtils = razorInterface.Utils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
 	cmdUtils = UtilsCmd{}
-	flagSetUtils = FlagSetUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 
 	rootCmd.AddCommand(unstakeCmd)
 

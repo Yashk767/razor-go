@@ -6,6 +6,7 @@ import (
 	"razor/core"
 	"razor/core/types"
 	"razor/pkg/bindings"
+	"razor/razorInterface"
 	"razor/utils"
 
 	"github.com/spf13/cobra"
@@ -68,10 +69,10 @@ func (utilsStruct UtilsStruct) extendLock(flagSet *pflag.FlagSet, config types.C
 }
 
 func init() {
-	razorUtils = Utils{}
-	stakeManagerUtils = StakeManagerUtils{}
-	transactionUtils = TransactionUtils{}
-	flagSetUtils = FlagSetUtils{}
+	razorUtils = razorInterface.Utils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
+	transactionUtils = razorInterface.TransactionUtils{}
+	flagSetUtils = razorInterface.FlagSetUtils{}
 	rootCmd.AddCommand(extendLockCmd)
 
 	var (

@@ -5,6 +5,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"os"
+	"razor/razorInterface"
 	"razor/utils"
 	"strconv"
 )
@@ -67,8 +68,8 @@ func (utilsStruct *UtilsStruct) GetStakerInfo(client *ethclient.Client, stakerId
 }
 
 func init() {
-	razorUtils = Utils{}
-	stakeManagerUtils = StakeManagerUtils{}
+	razorUtils = razorInterface.Utils{}
+	stakeManagerUtils = razorInterface.StakeManagerUtils{}
 
 	rootCmd.AddCommand(stakerInfoCmd)
 
