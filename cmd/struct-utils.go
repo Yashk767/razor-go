@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	ethAccounts "github.com/ethereum/go-ethereum/accounts"
 	"math/big"
+	"razor/accounts"
 	"razor/core/types"
 	"razor/pkg/bindings"
 	"razor/razorInterface"
@@ -25,9 +27,9 @@ type UtilsStruct struct {
 	voteManagerUtils  razorInterface.VoteManagerInterface
 	tokenManagerUtils razorInterface.TokenManagerInterface
 	keystoreUtils     razorInterface.KeystoreInterface
-	accountUtils      razorInterface.AccountInterface
 	flagSetUtils      razorInterface.FlagSetInterface
 	cryptoUtils       razorInterface.CryptoInterface
+	accountUtils      accounts.AccountUtilsStruct
 }
 
 func (proposeUtils ProposeUtils) getBiggestInfluenceAndId(client *ethclient.Client, address string, epoch uint32, utilsStruct UtilsStruct) (*big.Int, uint32, error) {
@@ -112,6 +114,10 @@ func (cmdUtils UtilsCmd) AutoWithdraw(txnArgs types.TransactionOptions, stakerId
 
 func (cmdUtils UtilsCmd) withdrawFunds(client *ethclient.Client, account types.Account, configurations types.Configurations, stakerId uint32, utilsStruct UtilsStruct) (common.Hash, error) {
 	return withdrawFunds(client, account, configurations, stakerId, utilsStruct)
+}
+
+func (cmdUtils UtilsCmd) Create(password string, utilsStruct UtilsStruct) (ethAccounts.Account, error) {
+	return Create(password, utilsStruct)
 }
 
 func (cmdUtils UtilsCmd) claimBounty(config types.Configurations, client *ethclient.Client, redeemBountyInput types.RedeemBountyInput, utilsStruct UtilsStruct) (common.Hash, error) {

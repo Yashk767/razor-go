@@ -11,7 +11,7 @@ import (
 var log = logger.NewLogger()
 
 func CreateAccount(path string, password string, accountUtils AccountUtilsStruct) accounts.Account {
-	newAcc, err := accountUtils.keystoreUtils.NewAccount(path, password)
+	newAcc, err := accountUtils.KeystoreUtils.NewAccount(path, password)
 	if err != nil {
 		log.Fatal("Error in creating account: ", err)
 	}
@@ -19,11 +19,11 @@ func CreateAccount(path string, password string, accountUtils AccountUtilsStruct
 }
 
 func getPrivateKeyFromKeystore(keystorePath string, password string, accountUtils AccountUtilsStruct) *ecdsa.PrivateKey {
-	jsonBytes, err := accountUtils.razorUtils.ReadFile(keystorePath)
+	jsonBytes, err := accountUtils.RazorUtils.ReadFile(keystorePath)
 	if err != nil {
 		log.Fatal("Error in reading keystore: ", err)
 	}
-	key, err := accountUtils.keystoreUtils.DecryptKey(jsonBytes, password)
+	key, err := accountUtils.KeystoreUtils.DecryptKey(jsonBytes, password)
 	if err != nil {
 		log.Fatal("Error in fetching private key: ", err)
 	}
@@ -31,16 +31,16 @@ func getPrivateKeyFromKeystore(keystorePath string, password string, accountUtil
 }
 
 func GetPrivateKey(address string, password string, keystorePath string, accountUtilsStruct AccountUtilsStruct) *ecdsa.PrivateKey {
-	allAccounts := accountUtilsStruct.keystoreUtils.Accounts(keystorePath)
+	allAccounts := accountUtilsStruct.KeystoreUtils.Accounts(keystorePath)
 	for _, account := range allAccounts {
 		if strings.EqualFold(account.Address.Hex(), address) {
-			return accountUtilsStruct.accountUtils.getPrivateKeyFromKeystore(account.URL.Path, password, accountUtilsStruct)
+			return accountUtilsStruct.AccountUtils.getPrivateKeyFromKeystore(account.URL.Path, password, accountUtilsStruct)
 		}
 	}
 	return nil
 }
 
 func Sign(hash []byte, account types.Account, defaultPath string, accountUtilsStruct AccountUtilsStruct) ([]byte, error) {
-	privateKey := accountUtilsStruct.accountUtils.GetPrivateKey(account.Address, account.Password, defaultPath, accountUtilsStruct)
-	return accountUtilsStruct.cryptoUtils.Sign(hash, privateKey)
+	privateKey := accountUtilsStruct.AccountUtils.GetPrivateKey(account.Address, account.Password, defaultPath, accountUtilsStruct)
+	return accountUtilsStruct.CryptoUtils.Sign(hash, privateKey)
 }

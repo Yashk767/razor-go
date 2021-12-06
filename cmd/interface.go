@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -25,6 +26,7 @@ type utilsCmdInterface interface {
 	Unstake(types.Configurations, *ethclient.Client, types.UnstakeInput, UtilsStruct) (types.TransactionOptions, error)
 	AutoWithdraw(types.TransactionOptions, uint32, UtilsStruct) error
 	withdrawFunds(*ethclient.Client, types.Account, types.Configurations, uint32, UtilsStruct) (common.Hash, error)
+	Create(string, UtilsStruct) (accounts.Account, error)
 	claimBounty(types.Configurations, *ethclient.Client, types.RedeemBountyInput, UtilsStruct) (common.Hash, error)
 	GetConfigData() (types.Configurations, error)
 	getBufferPercent() (int32, error)

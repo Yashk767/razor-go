@@ -7,10 +7,10 @@ import (
 )
 
 type AccountUtilsStruct struct {
-	keystoreUtils razorInterface.KeystoreInterface
-	razorUtils    razorInterface.UtilsInterface
-	cryptoUtils   razorInterface.CryptoInterface
-	accountUtils  AccountInterface
+	KeystoreUtils razorInterface.KeystoreInterface
+	RazorUtils    razorInterface.UtilsInterface
+	CryptoUtils   razorInterface.CryptoInterface
+	AccountUtils  AccountInterface
 }
 
 type AccountInterface interface {
