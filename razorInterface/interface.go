@@ -2,6 +2,7 @@ package razorInterface
 
 import (
 	"crypto/ecdsa"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"math/big"
 	"razor/core/types"
 	"razor/pkg/bindings"
@@ -70,6 +71,7 @@ type UtilsInterface interface {
 	GetAmountInWei(*big.Int) *big.Int
 	Sleep(time.Duration)
 	CalculateBlockTime(*ethclient.Client) int64
+	ReadFile(string) ([]byte, error)
 }
 
 type TokenManagerInterface interface {
@@ -108,13 +110,11 @@ type StakeManagerInterface interface {
 	GetBountyLock(*ethclient.Client, *bind.CallOpts, uint32) (types.BountyLock, error)
 }
 
-type AccountInterface interface {
-	CreateAccount(path string, password string) accounts.Account
-}
-
 type KeystoreInterface interface {
 	Accounts(string) []accounts.Account
 	ImportECDSA(string, *ecdsa.PrivateKey, string) (accounts.Account, error)
+	NewAccount(string, string) (accounts.Account, error)
+	DecryptKey(keyjson []byte, auth string) (*keystore.Key, error)
 }
 
 type FlagSetInterface interface {
@@ -149,6 +149,7 @@ type FlagSetInterface interface {
 
 type CryptoInterface interface {
 	HexToECDSA(string) (*ecdsa.PrivateKey, error)
+	Sign([]byte, *ecdsa.PrivateKey) ([]byte, error)
 }
 
 type VoteManagerInterface interface {

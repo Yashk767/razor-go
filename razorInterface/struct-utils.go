@@ -2,8 +2,8 @@ package razorInterface
 
 import (
 	"crypto/ecdsa"
+	"io/ioutil"
 	"math/big"
-	"razor/accounts"
 	"razor/core/types"
 	"razor/path"
 	"razor/pkg/bindings"
@@ -250,6 +250,10 @@ func (u Utils) CalculateBlockTime(client *ethclient.Client) int64 {
 	return utils.CalculateBlockTime(client)
 }
 
+func (u Utils) ReadFile(filename string) ([]byte, error) {
+	return ioutil.ReadFile(filename)
+}
+
 func (tokenManagerUtils TokenManagerUtils) Allowance(client *ethclient.Client, opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	tokenManager := utils.GetTokenManager(client)
 	return tokenManager.Allowance(opts, owner, spender)
@@ -360,10 +364,6 @@ func (assetManagerUtils AssetManagerUtils) UpdateCollection(client *ethclient.Cl
 	return assetManager.UpdateCollection(opts, collectionId, aggregationMethod, power, jobIds)
 }
 
-func (account AccountUtils) CreateAccount(path string, password string) ethAccounts.Account {
-	return accounts.CreateAccount(path, password)
-}
-
 func (keystoreUtils KeystoreUtils) Accounts(path string) []ethAccounts.Account {
 	ks := keystore.NewKeyStore(path, keystore.StandardScryptN, keystore.StandardScryptP)
 	return ks.Accounts()
@@ -372,6 +372,16 @@ func (keystoreUtils KeystoreUtils) Accounts(path string) []ethAccounts.Account {
 func (keystoreUtils KeystoreUtils) ImportECDSA(path string, priv *ecdsa.PrivateKey, passphrase string) (ethAccounts.Account, error) {
 	ks := keystore.NewKeyStore(path, keystore.StandardScryptN, keystore.StandardScryptP)
 	return ks.ImportECDSA(priv, passphrase)
+}
+
+func (keystoreUtils KeystoreUtils) NewAccount(path string, passphrase string) (ethAccounts.Account, error) {
+	ks := keystore.NewKeyStore(path, keystore.StandardScryptN, keystore.StandardScryptP)
+	ethAccounts.NewManager(&ethAccounts.Config{InsecureUnlockAllowed: false}, ks)
+	return ks.NewAccount(passphrase)
+}
+
+func (keystoreUtils KeystoreUtils) DecryptKey(jsonBytes []byte, password string) (*keystore.Key, error) {
+	return keystore.DecryptKey(jsonBytes, password)
 }
 
 func (flagSetUtils FlagSetUtils) GetStringFrom(flagSet *pflag.FlagSet) (string, error) {
@@ -514,4 +524,8 @@ func (blockManagerUtils BlockManagerUtils) DisputeBiggestInfluenceProposed(clien
 
 func (c CryptoUtils) HexToECDSA(hexKey string) (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(hexKey)
+}
+
+func (c CryptoUtils) Sign(digestHash []byte, prv *ecdsa.PrivateKey) (sig []byte, err error) {
+	return crypto.Sign(digestHash, prv)
 }
