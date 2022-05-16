@@ -36,6 +36,7 @@ import (
 //go:generate mockery --name AccountsUtils --output ./mocks --case=underscore
 //go:generate mockery --name BlockManagerUtils --output ./mocks --case=underscore
 //go:generate mockery --name AssetManagerUtils --output ./mocks --case=underscore
+//go:generate mockery --name BondManagerUtils --output ./mocks --case=underscore
 //go:generate mockery --name VoteManagerUtils --output ./mocks --case=underscore
 //go:generate mockery --name StakeManagerUtils --output ./mocks --case=underscore
 //go:generate mockery --name BindingsUtils --output ./mocks --case=underscore
@@ -60,6 +61,7 @@ var AccountsInterface AccountsUtils
 var BlockManagerInterface BlockManagerUtils
 var StakeManagerInterface StakeManagerUtils
 var AssetManagerInterface AssetManagerUtils
+var BondManagerInterface BondManagerUtils
 var VoteManagerInterface VoteManagerUtils
 var BindingsInterface BindingsUtils
 var JsonInterface JsonUtils
@@ -92,6 +94,7 @@ type Utils interface {
 	GetProposedBlock(*ethclient.Client, uint32, uint32) (bindings.StructsBlock, error)
 	GetSortedProposedBlockIds(*ethclient.Client, uint32) ([]uint32, error)
 	GetBlockIndexToBeConfirmed(client *ethclient.Client) (int8, error)
+	IsBlockConfirmed(client *ethclient.Client, epoch uint32) (bool, error)
 	GetBlockManagerWithOpts(*ethclient.Client) (*bindings.BlockManager, bind.CallOpts)
 	GetStakeManager(*ethclient.Client) *bindings.StakeManager
 	GetStakeManagerWithOpts(*ethclient.Client) (*bindings.StakeManager, bind.CallOpts)
@@ -129,6 +132,7 @@ type Utils interface {
 	GetAggregatedDataOfCollection(client *ethclient.Client, collectionId uint16, epoch uint32) (*big.Int, error)
 	GetJobs(*ethclient.Client) ([]bindings.StructsJob, error)
 	GetAllCollections(*ethclient.Client) ([]bindings.StructsCollection, error)
+	GetDataBondCollections(client *ethclient.Client) ([]uint16, error)
 	GetActiveCollectionIds(*ethclient.Client) ([]uint16, error)
 	GetDataFromAPI(string) ([]byte, error)
 	GetDataFromJSON(map[string]interface{}, string) (interface{}, error)
@@ -240,6 +244,7 @@ type BlockManagerUtils interface {
 	MaxAltBlocks(*ethclient.Client) (uint8, error)
 	SortedProposedBlockIds(*ethclient.Client, uint32, *big.Int) (uint32, error)
 	GetBlockIndexToBeConfirmed(client *ethclient.Client) (int8, error)
+	IsBlockConfirmed(client *ethclient.Client, epoch uint32) (bool, error)
 }
 
 type StakeManagerUtils interface {
@@ -265,6 +270,10 @@ type AssetManagerUtils interface {
 	GetCollectionIdFromIndex(client *ethclient.Client, index uint16) (uint16, error)
 	GetCollectionIdFromLeafId(client *ethclient.Client, leafId uint16) (uint16, error)
 	GetLeafIdOfACollection(client *ethclient.Client, collectionId uint16) (uint16, error)
+}
+
+type BondManagerUtils interface {
+	GetDataBondCollections(client *ethclient.Client) ([]uint16, error)
 }
 
 type VoteManagerUtils interface {
@@ -344,6 +353,7 @@ type OptionsPackageStruct struct {
 	BlockManagerInterface BlockManagerUtils
 	StakeManagerInterface StakeManagerUtils
 	AssetManagerInterface AssetManagerUtils
+	BondManagerInterface  BondManagerUtils
 	VoteManagerInterface  VoteManagerUtils
 	BindingsInterface     BindingsUtils
 	JsonInterface         JsonUtils
