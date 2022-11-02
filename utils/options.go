@@ -63,7 +63,7 @@ func (*UtilsStruct) GetTxnOpts(transactionData types.TransactionOptions) *bind.T
 	return txnOpts
 }
 
-func (*UtilsStruct) GetGasPrice(client *ethclient.Client, config types.Configurations) *big.Int {
+func (*GasStruct) GetGasPrice(client *ethclient.Client, config types.Configurations) *big.Int {
 	var gas *big.Int
 	if config.GasPrice != 0 {
 		gas = big.NewInt(1).Mul(big.NewInt(int64(config.GasPrice)), big.NewInt(1e9))
@@ -86,7 +86,7 @@ func (*UtilsStruct) GetGasPrice(client *ethclient.Client, config types.Configura
 	return gasPrice
 }
 
-func (*UtilsStruct) GetGasLimit(transactionData types.TransactionOptions, txnOpts *bind.TransactOpts) (uint64, error) {
+func (*GasStruct) GetGasLimit(transactionData types.TransactionOptions, txnOpts *bind.TransactOpts) (uint64, error) {
 	if transactionData.MethodName == "" {
 		return 0, nil
 	}
@@ -116,7 +116,7 @@ func (*UtilsStruct) GetGasLimit(transactionData types.TransactionOptions, txnOpt
 	return UtilsInterface.IncreaseGasLimitValue(transactionData.Client, gasLimit, transactionData.Config.GasLimitMultiplier)
 }
 
-func (*UtilsStruct) IncreaseGasLimitValue(client *ethclient.Client, gasLimit uint64, gasLimitMultiplier float32) (uint64, error) {
+func (*GasStruct) IncreaseGasLimitValue(client *ethclient.Client, gasLimit uint64, gasLimitMultiplier float32) (uint64, error) {
 	if gasLimit == 0 || gasLimitMultiplier <= 0 {
 		return gasLimit, nil
 	}

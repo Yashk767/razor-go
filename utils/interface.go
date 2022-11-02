@@ -64,6 +64,8 @@ var StakedTokenInterface StakedTokenUtils
 var RetryInterface RetryUtils
 var MerkleInterface MerkleTreeInterface
 var FlagSetInterface FlagSetUtils
+var FileInterface FileUtils
+var GasInterface GasUtils
 
 type Utils interface {
 	SuggestGasPriceWithRetry(client *ethclient.Client) (*big.Int, error)
@@ -139,22 +141,12 @@ type Utils interface {
 	CheckEthBalanceIsZero(client *ethclient.Client, address string)
 	AssignStakerId(flagSet *pflag.FlagSet, client *ethclient.Client, address string) (uint32, error)
 	GetEpoch(client *ethclient.Client) (uint32, error)
-	SaveDataToCommitJsonFile(filePath string, epoch uint32, commitData types.CommitData) error
-	ReadFromCommitJsonFile(filePath string) (types.CommitFileData, error)
-	SaveDataToProposeJsonFile(filePath string, proposeData types.ProposeFileData) error
-	ReadFromProposeJsonFile(filePath string) (types.ProposeFileData, error)
-	SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []uint32) error
-	ReadFromDisputeJsonFile(filePath string) (types.DisputeFileData, error)
 	CalculateBlockTime(client *ethclient.Client) int64
 	IsFlagPassed(name string) bool
 	GetTokenManager(client *ethclient.Client) *bindings.RAZOR
 	GetStakedToken(client *ethclient.Client, tokenAddress common.Address) *bindings.StakedToken
 	GetUint32(flagSet *pflag.FlagSet, name string) (uint32, error)
 	WaitTillNextNSecs(waitTime int32)
-	ReadJSONData(fileName string) (map[string]*types.StructsJob, error)
-	WriteDataToJSON(fileName string, data map[string]*types.StructsJob) error
-	DeleteJobFromJSON(fileName string, jobId string) error
-	AddJobToJSON(fileName string, job *types.StructsJob) error
 	CheckTransactionReceipt(client *ethclient.Client, _txHash string) int
 	CalculateSalt(epoch uint32, medians []*big.Int) [32]byte
 	ToAssign(client *ethclient.Client) (uint16, error)
@@ -164,7 +156,6 @@ type Utils interface {
 	GetRemainingTimeOfCurrentState(client *ethclient.Client, bufferPercent int32) (int64, error)
 	ConvertToNumber(num interface{}) (*big.Float, error)
 	SecondsToReadableTime(input int) string
-	AssignLogFile(flagSet *pflag.FlagSet)
 	EstimateBlockNumberAtEpochBeginning(client *ethclient.Client, currentBlockNumber *big.Int) (*big.Int, error)
 	GetEpochLastProposed(client *ethclient.Client, stakerId uint32) (uint32, error)
 	CheckAmountAndBalance(amountInWei *big.Int, balance *big.Int) *big.Int
@@ -304,12 +295,29 @@ type FlagSetUtils interface {
 	GetLogFileName(flagSet *pflag.FlagSet) (string, error)
 }
 
+type FileUtils interface {
+	SaveDataToCommitJsonFile(filePath string, epoch uint32, commitData types.CommitData) error
+	ReadFromCommitJsonFile(filePath string) (types.CommitFileData, error)
+	SaveDataToProposeJsonFile(filePath string, proposeData types.ProposeFileData) error
+	ReadFromProposeJsonFile(filePath string) (types.ProposeFileData, error)
+	SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []uint32) error
+	ReadFromDisputeJsonFile(filePath string) (types.DisputeFileData, error)
+	AssignLogFile(flagSet *pflag.FlagSet)
+}
+
+type GasUtils interface {
+	SuggestGasPriceWithRetry(client *ethclient.Client) (*big.Int, error)
+	GetGasPrice(client *ethclient.Client, config types.Configurations) *big.Int
+	GetGasLimit(transactionData types.TransactionOptions, txnOpts *bind.TransactOpts) (uint64, error)
+	EstimateGasWithRetry(client *ethclient.Client, message ethereum.CallMsg) (uint64, error)
+	IncreaseGasLimitValue(client *ethclient.Client, gasLimit uint64, gasLimitMultiplier float32) (uint64, error)
+}
+
 type UtilsStruct struct{}
 type EthClientStruct struct{}
 type ClientStruct struct{}
 type TimeStruct struct{}
 type OSStruct struct{}
-type BufioStruct struct{}
 type CoinStruct struct{}
 type IOStruct struct{}
 type ABIStruct struct{}
@@ -326,6 +334,8 @@ type StakedTokenStruct struct{}
 type RetryStruct struct{}
 type MerkleTreeStruct struct{}
 type FlagSetStruct struct{}
+type FileStruct struct{}
+type GasStruct struct{}
 
 type OptionsPackageStruct struct {
 	UtilsInterface        Utils
@@ -349,4 +359,6 @@ type OptionsPackageStruct struct {
 	RetryInterface        RetryUtils
 	MerkleInterface       MerkleTreeInterface
 	FlagSetInterface      FlagSetUtils
+	FileInterface         FileUtils
+	GasInterface          GasUtils
 }

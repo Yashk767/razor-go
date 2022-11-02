@@ -246,7 +246,7 @@ func (*UtilsStruct) EstimateBlockNumberAtEpochBeginning(client *ethclient.Client
 
 }
 
-func (*UtilsStruct) SaveDataToCommitJsonFile(filePath string, epoch uint32, commitData types.CommitData) error {
+func (*FileStruct) SaveDataToCommitJsonFile(filePath string, epoch uint32, commitData types.CommitData) error {
 
 	var data types.CommitFileData
 	data.Epoch = epoch
@@ -266,7 +266,7 @@ func (*UtilsStruct) SaveDataToCommitJsonFile(filePath string, epoch uint32, comm
 	return nil
 }
 
-func (*UtilsStruct) ReadFromCommitJsonFile(filePath string) (types.CommitFileData, error) {
+func (*FileStruct) ReadFromCommitJsonFile(filePath string) (types.CommitFileData, error) {
 	jsonFile, err := OS.Open(filePath)
 	if err != nil {
 		log.Error("Error in opening json file: ", err)
@@ -287,7 +287,7 @@ func (*UtilsStruct) ReadFromCommitJsonFile(filePath string) (types.CommitFileDat
 	return commitedData, nil
 }
 
-func (*UtilsStruct) AssignLogFile(flagSet *pflag.FlagSet) {
+func (*FileStruct) AssignLogFile(flagSet *pflag.FlagSet) {
 	if UtilsInterface.IsFlagPassed("logFile") {
 		fileName, err := FlagSetInterface.GetLogFileName(flagSet)
 		if err != nil {
@@ -297,7 +297,7 @@ func (*UtilsStruct) AssignLogFile(flagSet *pflag.FlagSet) {
 	}
 }
 
-func (*UtilsStruct) SaveDataToProposeJsonFile(filePath string, proposeData types.ProposeFileData) error {
+func (*FileStruct) SaveDataToProposeJsonFile(filePath string, proposeData types.ProposeFileData) error {
 
 	var data types.ProposeFileData
 	data.Epoch = proposeData.Epoch
@@ -317,7 +317,7 @@ func (*UtilsStruct) SaveDataToProposeJsonFile(filePath string, proposeData types
 	return nil
 }
 
-func (*UtilsStruct) ReadFromProposeJsonFile(filePath string) (types.ProposeFileData, error) {
+func (*FileStruct) ReadFromProposeJsonFile(filePath string) (types.ProposeFileData, error) {
 	jsonFile, err := OS.Open(filePath)
 	if err != nil {
 		log.Error("Error in opening json file: ", err)
@@ -338,7 +338,7 @@ func (*UtilsStruct) ReadFromProposeJsonFile(filePath string) (types.ProposeFileD
 	return proposedData, nil
 }
 
-func (*UtilsStruct) SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []uint32) error {
+func (*FileStruct) SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []uint32) error {
 	var data types.DisputeFileData
 
 	data.BountyIdQueue = bountyIdQueue
@@ -354,7 +354,7 @@ func (*UtilsStruct) SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []u
 	return nil
 }
 
-func (*UtilsStruct) ReadFromDisputeJsonFile(filePath string) (types.DisputeFileData, error) {
+func (*FileStruct) ReadFromDisputeJsonFile(filePath string) (types.DisputeFileData, error) {
 	jsonFile, err := OS.Open(filePath)
 	if err != nil {
 		log.Error("Error in opening json file: ", err)
