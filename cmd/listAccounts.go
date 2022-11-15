@@ -5,7 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	pathPkg "path"
+	"path/filepath"
 	"razor/utils"
 )
 
@@ -25,7 +25,9 @@ func initialiseListAccounts(cmd *cobra.Command, args []string) {
 
 //This function sets the flag appropriately and executes the ListAccounts function
 func (*UtilsStruct) ExecuteListAccounts(flagSet *pflag.FlagSet) {
-	razorUtils.AssignLogFile(flagSet)
+	config, err := cmdUtils.GetConfigData()
+	utils.CheckError("Error in getting config: ", err)
+	razorUtils.AssignLogFile(flagSet, config)
 	allAccounts, err := cmdUtils.ListAccounts()
 	utils.CheckError("ListAccounts error: ", err)
 	log.Info("The available accounts are: ")
@@ -42,7 +44,7 @@ func (*UtilsStruct) ListAccounts() ([]accounts.Account, error) {
 		return nil, err
 	}
 
-	keystorePath := pathPkg.Join(path, "keystore_files")
+	keystorePath := filepath.Join(path, "keystore_files")
 	return keystoreUtils.Accounts(keystorePath), nil
 }
 

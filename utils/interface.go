@@ -68,14 +68,9 @@ var FileInterface FileUtils
 var GasInterface GasUtils
 
 type Utils interface {
-	SuggestGasPriceWithRetry(client *ethclient.Client) (*big.Int, error)
 	MultiplyFloatAndBigInt(bigIntVal *big.Int, floatingVal float64) *big.Int
 	GetNonceAtWithRetry(client *ethclient.Client, accountAddress common.Address) (uint64, error)
-	GetGasPrice(client *ethclient.Client, config types.Configurations) *big.Int
 	GetTxnOpts(transactionData types.TransactionOptions) *bind.TransactOpts
-	GetGasLimit(transactionData types.TransactionOptions, txnOpts *bind.TransactOpts) (uint64, error)
-	EstimateGasWithRetry(client *ethclient.Client, message ethereum.CallMsg) (uint64, error)
-	IncreaseGasLimitValue(client *ethclient.Client, gasLimit uint64, gasLimitMultiplier float32) (uint64, error)
 	GetLatestBlockWithRetry(client *ethclient.Client) (*Types.Header, error)
 	FilterLogsWithRetry(client *ethclient.Client, query ethereum.FilterQuery) ([]Types.Log, error)
 	BalanceAtWithRetry(client *ethclient.Client, account common.Address) (*big.Int, error)
@@ -156,6 +151,7 @@ type Utils interface {
 	GetRemainingTimeOfCurrentState(client *ethclient.Client, bufferPercent int32) (int64, error)
 	ConvertToNumber(num interface{}) (*big.Float, error)
 	SecondsToReadableTime(input int) string
+	AssignLogFile(flagSet *pflag.FlagSet, config types.Configurations)
 	EstimateBlockNumberAtEpochBeginning(client *ethclient.Client, currentBlockNumber *big.Int) (*big.Int, error)
 	GetEpochLastProposed(client *ethclient.Client, stakerId uint32) (uint32, error)
 	CheckAmountAndBalance(amountInWei *big.Int, balance *big.Int) *big.Int

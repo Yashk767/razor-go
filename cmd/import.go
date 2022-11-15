@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	pathPkg "path"
+	"path/filepath"
 	"razor/path"
 	"razor/utils"
 	"strings"
@@ -28,7 +28,9 @@ func initialiseImport(cmd *cobra.Command, args []string) {
 
 //This function sets the flags appropriately and executes the ImportAccount function
 func (*UtilsStruct) ExecuteImport(flagSet *pflag.FlagSet) {
-	razorUtils.AssignLogFile(flagSet)
+	config, err := cmdUtils.GetConfigData()
+	utils.CheckError("Error in getting config: ", err)
+	razorUtils.AssignLogFile(flagSet, config)
 	account, err := cmdUtils.ImportAccount()
 	utils.CheckError("Import error: ", err)
 	log.Info("Account Address: ", account.Address)
@@ -53,7 +55,7 @@ func (*UtilsStruct) ImportAccount() (accounts.Account, error) {
 		log.Error("Error in parsing private key")
 		return accounts.Account{Address: common.Address{0x00}}, err
 	}
-	keystoreDir := pathPkg.Join(razorPath, "keystore_files")
+	keystoreDir := filepath.Join(razorPath, "keystore_files")
 	if _, err := path.OSUtilsInterface.Stat(keystoreDir); path.OSUtilsInterface.IsNotExist(err) {
 		mkdirErr := path.OSUtilsInterface.Mkdir(keystoreDir, 0700)
 		if mkdirErr != nil {

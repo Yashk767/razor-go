@@ -2,17 +2,20 @@ package cmd
 
 import (
 	"errors"
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/pflag"
 	razorAccounts "razor/accounts"
+	"razor/core/types"
 	pathPkgMocks "razor/path/mocks"
 	utilsPkgMocks "razor/utils/mocks"
 
-	"github.com/stretchr/testify/mock"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/spf13/pflag"
+
 	Mocks "razor/accounts/mocks"
 	"razor/cmd/mocks"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 )
 
 func TestCreate(t *testing.T) {
@@ -145,9 +148,10 @@ func TestExecuteCreate(t *testing.T) {
 			razorUtils = utilsMock
 			cmdUtils = cmdUtilsMock
 
-			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"))
+			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
 			utilsMock.On("AssignPassword", mock.AnythingOfType("*pflag.FlagSet")).Return(tt.args.password)
 			cmdUtilsMock.On("Create", mock.AnythingOfType("string")).Return(tt.args.account, tt.args.accountErr)
+			cmdUtilsMock.On("GetConfigData").Return(types.Configurations{}, nil)
 
 			utils := &UtilsStruct{}
 			fatal = false

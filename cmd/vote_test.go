@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"os"
 	"path"
+	"path/filepath"
 	"razor/cmd/mocks"
 	"razor/core/types"
 	pathPkgMocks "razor/path/mocks"
@@ -135,7 +136,7 @@ func TestExecuteVote(t *testing.T) {
 			cmdUtils = cmdUtilsMock
 			osUtils = osMock
 
-			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"))
+			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
 			cmdUtilsMock.On("GetConfigData").Return(tt.args.config, tt.args.configErr)
 			utilsMock.On("AssignPassword", flagSet).Return(tt.args.password)
 			flagSetUtilsMock.On("GetStringAddress", mock.AnythingOfType("*pflag.FlagSet")).Return(tt.args.address, tt.args.addressErr)
@@ -169,7 +170,7 @@ func convertToSliceOfInterface(arr []uint32) []interface{} {
 func TestCalculateSecret(t *testing.T) {
 	dir, _ := os.Getwd()
 	razorPath := path.Dir(dir)
-	testKeystorePath := path.Join(razorPath, "utils/test_accounts")
+	testKeystorePath := filepath.Join(razorPath, "utils/test_accounts")
 
 	type args struct {
 		address  string

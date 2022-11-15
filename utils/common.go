@@ -287,13 +287,13 @@ func (*FileStruct) ReadFromCommitJsonFile(filePath string) (types.CommitFileData
 	return commitedData, nil
 }
 
-func (*FileStruct) AssignLogFile(flagSet *pflag.FlagSet) {
+func (*UtilsStruct) AssignLogFile(flagSet *pflag.FlagSet, configurations types.Configurations) {
 	if UtilsInterface.IsFlagPassed("logFile") {
 		fileName, err := FlagSetInterface.GetLogFileName(flagSet)
 		if err != nil {
 			log.Fatalf("Error in getting file name : ", err)
 		}
-		logger.InitializeLogger(fileName)
+		logger.InitializeLogger(fileName, configurations)
 	}
 }
 

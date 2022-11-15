@@ -1,11 +1,13 @@
 package cmd
 
 import (
-	"github.com/spf13/pflag"
-	"github.com/stretchr/testify/mock"
 	"razor/cmd/mocks"
+	"razor/core/types"
 	utilsPkgMocks "razor/utils/mocks"
 	"testing"
+
+	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestContractAddresses(t *testing.T) {
@@ -47,7 +49,8 @@ func TestExecuteContractAddresses(t *testing.T) {
 			razorUtils = utilsMock
 			cmdUtils = cmdUtilsMock
 
-			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"))
+			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
+			cmdUtilsMock.On("GetConfigData").Return(types.Configurations{}, nil)
 			cmdUtilsMock.On("ContractAddresses")
 
 			utils := &UtilsStruct{}

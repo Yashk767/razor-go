@@ -24,6 +24,12 @@ var DefaultGasLimit = 2
 var DefaultRPCTimeout = 10
 var DefaultLogLevel = ""
 
+//Following are the default logFile parameters in config
+
+var DefaultLogFileMaxSize = 5
+var DefaultLogFileMaxBackups = 10
+var DefaultLogFileMaxAge = 30
+
 //DisputeGasMultiplier is a constant gasLimitMultiplier to increase gas Limit for function `disputeCollectionIdShouldBeAbsent` and `disputeCollectionIdShouldBePresent`
 var DisputeGasMultiplier float32 = 5.5
 
@@ -37,3 +43,9 @@ var AssetsDataFile = "assets.json"
 var ConfigFile = "razor.yaml"
 var LogFileDirectory = "logs"
 var DefaultPathName = ".razor"
+
+//LoggerTimeout is threshold number of seconds after which logger will time out from fetching blockNumber
+var LoggerTimeout = 10
+
+// LoggerTimeoutErr is the custom error message that would be displayed as a field in logs if logger times out
+var LoggerTimeoutErr = "Logger Timeout, error in fetching block number"
