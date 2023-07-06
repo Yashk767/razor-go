@@ -43,6 +43,8 @@ import (
 //go:generate mockery --name RetryUtils --output ./mocks --case=underscore
 //go:generate mockery --name MerkleTreeInterface --output ./mocks --case=underscore
 //go:generate mockery --name FlagSetUtils --output ./mocks --case=underscore
+//go:generate mockery --name GasUtils --output ./mocks --case=underscore
+//go:generate mockery --name FileUtils --output ./mocks --case=underscore
 
 var UtilsInterface Utils
 var EthClient EthClientUtils
@@ -65,19 +67,12 @@ var StakedTokenInterface StakedTokenUtils
 var RetryInterface RetryUtils
 var MerkleInterface MerkleTreeInterface
 var FlagSetInterface FlagSetUtils
+var FileInterface FileUtils
+var GasInterface GasUtils
 
 type Utils interface {
-	SuggestGasPriceWithRetry(client *ethclient.Client) (*big.Int, error)
 	MultiplyFloatAndBigInt(bigIntVal *big.Int, floatingVal float64) *big.Int
-	GetNonceAtWithRetry(client *ethclient.Client, accountAddress common.Address) (uint64, error)
-	GetGasPrice(client *ethclient.Client, config types.Configurations) *big.Int
 	GetTxnOpts(transactionData types.TransactionOptions) *bind.TransactOpts
-	GetGasLimit(transactionData types.TransactionOptions, txnOpts *bind.TransactOpts) (uint64, error)
-	EstimateGasWithRetry(client *ethclient.Client, message ethereum.CallMsg) (uint64, error)
-	IncreaseGasLimitValue(client *ethclient.Client, gasLimit uint64, gasLimitMultiplier float32) (uint64, error)
-	GetLatestBlockWithRetry(client *ethclient.Client) (*Types.Header, error)
-	FilterLogsWithRetry(client *ethclient.Client, query ethereum.FilterQuery) ([]Types.Log, error)
-	BalanceAtWithRetry(client *ethclient.Client, account common.Address) (*big.Int, error)
 	GetBlockManager(client *ethclient.Client) *bindings.BlockManager
 	GetOptions() bind.CallOpts
 	GetNumberOfProposedBlocks(client *ethclient.Client, epoch uint32) (uint8, error)
@@ -117,7 +112,7 @@ type Utils interface {
 	GetActiveJob(client *ethclient.Client, jobId uint16) (bindings.StructsJob, error)
 	GetCollection(client *ethclient.Client, collectionId uint16) (bindings.StructsCollection, error)
 	GetActiveCollection(client *ethclient.Client, collectionId uint16) (bindings.StructsCollection, error)
-	Aggregate(client *ethclient.Client, previousEpoch uint32, collection bindings.StructsCollection) (*big.Int, error)
+	Aggregate(client *ethclient.Client, previousEpoch uint32, collection bindings.StructsCollection, localCache *cache.LocalCache) (*big.Int, error)
 	GetDataToCommitFromJobs(jobs []bindings.StructsJob, localCache *cache.LocalCache) ([]*big.Int, []uint8, error)
 	GetDataToCommitFromJob(job bindings.StructsJob, localCache *cache.LocalCache) (*big.Int, error)
 	GetAssignedCollections(client *ethclient.Client, numActiveCollections uint16, seed []byte) (map[int]bool, []*big.Int, error)
@@ -125,7 +120,7 @@ type Utils interface {
 	GetCollectionIdFromIndex(client *ethclient.Client, medianIndex uint16) (uint16, error)
 	GetCollectionIdFromLeafId(client *ethclient.Client, leafId uint16) (uint16, error)
 	GetNumActiveCollections(client *ethclient.Client) (uint16, error)
-	GetAggregatedDataOfCollection(client *ethclient.Client, collectionId uint16, epoch uint32) (*big.Int, error)
+	GetAggregatedDataOfCollection(client *ethclient.Client, collectionId uint16, epoch uint32, localCache *cache.LocalCache) (*big.Int, error)
 	GetJobs(client *ethclient.Client) ([]bindings.StructsJob, error)
 	GetAllCollections(client *ethclient.Client) ([]bindings.StructsCollection, error)
 	GetActiveCollectionIds(client *ethclient.Client) ([]uint16, error)
@@ -140,12 +135,6 @@ type Utils interface {
 	CheckEthBalanceIsZero(client *ethclient.Client, address string)
 	AssignStakerId(flagSet *pflag.FlagSet, client *ethclient.Client, address string) (uint32, error)
 	GetEpoch(client *ethclient.Client) (uint32, error)
-	SaveDataToCommitJsonFile(filePath string, epoch uint32, commitData types.CommitData) error
-	ReadFromCommitJsonFile(filePath string) (types.CommitFileData, error)
-	SaveDataToProposeJsonFile(filePath string, proposeData types.ProposeFileData) error
-	ReadFromProposeJsonFile(filePath string) (types.ProposeFileData, error)
-	SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []uint32) error
-	ReadFromDisputeJsonFile(filePath string) (types.DisputeFileData, error)
 	CalculateBlockTime(client *ethclient.Client) int64
 	IsFlagPassed(name string) bool
 	GetTokenManager(client *ethclient.Client) *bindings.RAZOR
@@ -160,12 +149,9 @@ type Utils interface {
 	CalculateSalt(epoch uint32, medians []*big.Int) [32]byte
 	ToAssign(client *ethclient.Client) (uint16, error)
 	Prng(max uint32, prngHashes []byte) *big.Int
-	GetSaltFromBlockchain(client *ethclient.Client) ([32]byte, error)
-	GetStakerSRZRBalance(client *ethclient.Client, staker bindings.StructsStaker) (*big.Int, error)
 	GetRemainingTimeOfCurrentState(client *ethclient.Client, bufferPercent int32) (int64, error)
 	ConvertToNumber(num interface{}) (*big.Float, error)
 	SecondsToReadableTime(input int) string
-	AssignLogFile(flagSet *pflag.FlagSet, config types.Configurations)
 	EstimateBlockNumberAtEpochBeginning(client *ethclient.Client, currentBlockNumber *big.Int) (*big.Int, error)
 	GetEpochLastProposed(client *ethclient.Client, stakerId uint32) (uint32, error)
 	CheckAmountAndBalance(amountInWei *big.Int, balance *big.Int) *big.Int
@@ -173,6 +159,9 @@ type Utils interface {
 	AssignPassword(flagSet *pflag.FlagSet) string
 	PrivateKeyPrompt() string
 	GetRogueRandomValue(value int) *big.Int
+	GetStakedTokenManagerWithOpts(client *ethclient.Client, tokenAddress common.Address) (*bindings.StakedToken, bind.CallOpts)
+	GetStakerSRZRBalance(client *ethclient.Client, staker bindings.StructsStaker) (*big.Int, error)
+	CheckPassword(address string, password string) error
 }
 
 type EthClientUtils interface {
@@ -187,6 +176,12 @@ type ClientUtils interface {
 	SuggestGasPrice(client *ethclient.Client, ctx context.Context) (*big.Int, error)
 	EstimateGas(client *ethclient.Client, ctx context.Context, msg ethereum.CallMsg) (uint64, error)
 	FilterLogs(client *ethclient.Client, ctx context.Context, q ethereum.FilterQuery) ([]Types.Log, error)
+	SuggestGasPriceWithRetry(client *ethclient.Client) (*big.Int, error)
+	EstimateGasWithRetry(client *ethclient.Client, message ethereum.CallMsg) (uint64, error)
+	GetLatestBlockWithRetry(client *ethclient.Client) (*Types.Header, error)
+	FilterLogsWithRetry(client *ethclient.Client, query ethereum.FilterQuery) ([]Types.Log, error)
+	BalanceAtWithRetry(client *ethclient.Client, account common.Address) (*big.Int, error)
+	GetNonceAtWithRetry(client *ethclient.Client, accountAddress common.Address) (uint64, error)
 }
 
 type TimeUtils interface {
@@ -294,7 +289,7 @@ type JsonUtils interface {
 }
 
 type StakedTokenUtils interface {
-	BalanceOf(stakedToken *bindings.StakedToken, callOpts *bind.CallOpts, address common.Address) (*big.Int, error)
+	BalanceOf(client *ethclient.Client, tokenAddress common.Address, address common.Address) (*big.Int, error)
 }
 
 type RetryUtils interface {
@@ -305,12 +300,27 @@ type FlagSetUtils interface {
 	GetLogFileName(flagSet *pflag.FlagSet) (string, error)
 }
 
+type FileUtils interface {
+	SaveDataToCommitJsonFile(filePath string, epoch uint32, commitData types.CommitData) error
+	ReadFromCommitJsonFile(filePath string) (types.CommitFileData, error)
+	SaveDataToProposeJsonFile(filePath string, proposeData types.ProposeFileData) error
+	ReadFromProposeJsonFile(filePath string) (types.ProposeFileData, error)
+	SaveDataToDisputeJsonFile(filePath string, bountyIdQueue []uint32) error
+	ReadFromDisputeJsonFile(filePath string) (types.DisputeFileData, error)
+	AssignLogFile(flagSet *pflag.FlagSet, configurations types.Configurations)
+}
+
+type GasUtils interface {
+	GetGasPrice(client *ethclient.Client, config types.Configurations) *big.Int
+	GetGasLimit(transactionData types.TransactionOptions, txnOpts *bind.TransactOpts) (uint64, error)
+	IncreaseGasLimitValue(client *ethclient.Client, gasLimit uint64, gasLimitMultiplier float32) (uint64, error)
+}
+
 type UtilsStruct struct{}
 type EthClientStruct struct{}
 type ClientStruct struct{}
 type TimeStruct struct{}
 type OSStruct struct{}
-type BufioStruct struct{}
 type CoinStruct struct{}
 type IOStruct struct{}
 type ABIStruct struct{}
@@ -327,6 +337,8 @@ type StakedTokenStruct struct{}
 type RetryStruct struct{}
 type MerkleTreeStruct struct{}
 type FlagSetStruct struct{}
+type FileStruct struct{}
+type GasStruct struct{}
 
 type OptionsPackageStruct struct {
 	UtilsInterface        Utils
@@ -350,4 +362,6 @@ type OptionsPackageStruct struct {
 	RetryInterface        RetryUtils
 	MerkleInterface       MerkleTreeInterface
 	FlagSetInterface      FlagSetUtils
+	FileInterface         FileUtils
+	GasInterface          GasUtils
 }

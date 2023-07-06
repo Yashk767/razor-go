@@ -9,16 +9,17 @@ import (
 	"razor/core"
 	"time"
 
+	"io/ioutil"
+	"razor/core/types"
+
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/avast/retry-go"
 	"github.com/gocolly/colly"
-	"io/ioutil"
-	"razor/core/types"
 )
 
 func (*UtilsStruct) GetDataFromAPI(dataSourceURLStruct types.DataSourceURL, localCache *cache.LocalCache) ([]byte, error) {
 	client := http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: time.Duration(HTTPTimeout) * time.Second,
 	}
 	cachedData, cachedErr := localCache.Read(dataSourceURLStruct.URL)
 	if cachedErr != nil {
@@ -73,14 +74,12 @@ func (*UtilsStruct) GetDataFromAPI(dataSourceURLStruct types.DataSourceURL, loca
 				return nil, err
 			}
 		}
-		dataToCache := cache.Data{
-			Result: body,
-		}
-		localCache.Update(dataToCache, dataSourceURLStruct.URL, time.Now().Add(time.Second*time.Duration(core.StateLength)).Unix())
+		//Storing the data into cache
+		localCache.Update(body, dataSourceURLStruct.URL, time.Now().Add(time.Second*time.Duration(core.StateLength)).Unix())
 		return body, nil
 	}
 	log.Debugf("Getting Data for URL %s from local cache...", dataSourceURLStruct.URL)
-	return cachedData.Result, nil
+	return cachedData, nil
 }
 
 func (*UtilsStruct) GetDataFromJSON(jsonObject map[string]interface{}, selector string) (interface{}, error) {

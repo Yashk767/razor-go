@@ -2,18 +2,13 @@ package cmd
 
 import (
 	"errors"
+	"razor/core/types"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/pflag"
-	razorAccounts "razor/accounts"
-	"razor/core/types"
-	pathPkgMocks "razor/path/mocks"
-	utilsPkgMocks "razor/utils/mocks"
-
 	"github.com/stretchr/testify/mock"
-	Mocks "razor/accounts/mocks"
-	"razor/cmd/mocks"
-	"testing"
 )
 
 func TestCreate(t *testing.T) {
@@ -61,17 +56,10 @@ func TestCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			SetUpMockInterfaces()
 
-			utilsMock := new(utilsPkgMocks.Utils)
-			accountUtilsMock := new(Mocks.AccountInterface)
-			pathUtilsMock := new(pathPkgMocks.PathInterface)
-
-			razorUtils = utilsMock
-			razorAccounts.AccountUtilsInterface = accountUtilsMock
-			pathUtils = pathUtilsMock
-
-			pathUtilsMock.On("GetDefaultPath").Return(tt.args.path, tt.args.pathErr)
-			accountUtilsMock.On("CreateAccount", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(accounts.Account{
+			pathMock.On("GetDefaultPath").Return(tt.args.path, tt.args.pathErr)
+			accountsMock.On("CreateAccount", mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(accounts.Account{
 				Address: tt.args.account.Address,
 				URL:     accounts.URL{Scheme: "TestKeyScheme", Path: "test/key/path"},
 			})
@@ -139,15 +127,11 @@ func TestExecuteCreate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			SetUpMockInterfaces()
 
-			utilsMock := new(utilsPkgMocks.Utils)
-			cmdUtilsMock := new(mocks.UtilsCmdInterface)
-
-			razorUtils = utilsMock
-			cmdUtils = cmdUtilsMock
-
-			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
+			fileUtilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
 			utilsMock.On("AssignPassword", mock.AnythingOfType("*pflag.FlagSet")).Return(tt.args.password)
+			utilsMock.On("CheckPassword", mock.Anything, mock.Anything).Return(nil)
 			cmdUtilsMock.On("Create", mock.AnythingOfType("string")).Return(tt.args.account, tt.args.accountErr)
 			cmdUtilsMock.On("GetConfigData").Return(types.Configurations{}, nil)
 

@@ -140,21 +140,21 @@ func (*UtilsStruct) GetActiveCollectionIds(client *ethclient.Client) ([]uint16, 
 	return activeCollectionIds, nil
 }
 
-func (*UtilsStruct) GetAggregatedDataOfCollection(client *ethclient.Client, collectionId uint16, epoch uint32) (*big.Int, error) {
+func (*UtilsStruct) GetAggregatedDataOfCollection(client *ethclient.Client, collectionId uint16, epoch uint32, localCache *cache.LocalCache) (*big.Int, error) {
 	activeCollection, err := UtilsInterface.GetActiveCollection(client, collectionId)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	//Supply previous epoch to Aggregate in case if last reported value is required.
-	collectionData, aggregationError := UtilsInterface.Aggregate(client, epoch-1, activeCollection)
+	collectionData, aggregationError := UtilsInterface.Aggregate(client, epoch-1, activeCollection, localCache)
 	if aggregationError != nil {
 		return nil, aggregationError
 	}
 	return collectionData, nil
 }
 
-func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, collection bindings.StructsCollection) (*big.Int, error) {
+func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, collection bindings.StructsCollection, localCache *cache.LocalCache) (*big.Int, error) {
 	var jobs []bindings.StructsJob
 	var overriddenJobIds []uint16
 
@@ -164,6 +164,7 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 		return nil, err
 	}
 	if _, err := path.OSUtilsInterface.Stat(assetsFilePath); !errors.Is(err, os.ErrNotExist) {
+		log.Debug("Fetching the jobs from assets.json file...")
 		jsonFile, err := path.OSUtilsInterface.Open(assetsFilePath)
 		if err != nil {
 			return nil, err
@@ -188,6 +189,9 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 
 		// Also adding custom jobs to jobs array
 		customJobs := GetCustomJobsFromJSONFile(collection.Name, dataString)
+		if len(customJobs) != 0 {
+			log.Debugf("Got Custom Jobs from asset.json file: %+v", customJobs)
+		}
 		jobs = append(jobs, customJobs...)
 	}
 
@@ -197,7 +201,7 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 		if !Contains(overriddenJobIds, id) {
 			job, err := UtilsInterface.GetActiveJob(client, id)
 			if err != nil {
-				log.Errorf("Error in fetching job %d: %s", id, err)
+				log.Errorf("Error in fetching job %d: %v", id, err)
 				continue
 			}
 			jobs = append(jobs, job)
@@ -207,7 +211,6 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 	if len(jobs) == 0 {
 		return nil, errors.New("no jobs present in the collection")
 	}
-	localCache := cache.NewLocalCache(time.Second * time.Duration(core.StateLength))
 	dataToCommit, weight, err := UtilsInterface.GetDataToCommitFromJobs(jobs, localCache)
 	if err != nil || len(dataToCommit) == 0 {
 		prevCommitmentData, err := UtilsInterface.FetchPreviousValue(client, previousEpoch, collection.Id)
@@ -216,7 +219,6 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 		}
 		return prevCommitmentData, nil
 	}
-	localCache.StopCleanup()
 	return performAggregation(dataToCommit, weight, collection.AggregationMethod)
 }
 
@@ -261,6 +263,7 @@ func (*UtilsStruct) GetDataToCommitFromJobs(jobs []bindings.StructsJob, localCac
 		if err != nil {
 			continue
 		}
+		log.Debugf("Job %s gives data %s", job.Url, dataToAppend)
 		data = append(data, dataToAppend)
 		weight = append(weight, job.Weight)
 	}
@@ -301,7 +304,7 @@ func (*UtilsStruct) GetDataToCommitFromJob(job bindings.StructsJob, localCache *
 		start := time.Now()
 		response, apiErr = UtilsInterface.GetDataFromAPI(dataSourceURLStruct, localCache)
 		if apiErr != nil {
-			log.Error("Error in fetching data from API: ", apiErr)
+			log.Errorf("Error in fetching data from API %s: %v", job.Url, apiErr)
 			return nil, apiErr
 		}
 		elapsed := time.Since(start).Seconds()
@@ -414,26 +417,36 @@ func (*UtilsStruct) GetCollectionIdFromLeafId(client *ethclient.Client, leafId u
 
 func GetCustomJobsFromJSONFile(collection string, jsonFileData string) []bindings.StructsJob {
 	var collectionCustomJobs []bindings.StructsJob
+	var customJob types.CustomJob
 
 	collectionCustomJobsPath := "assets.collection." + collection + ".custom jobs"
-	customJobs := gjson.Get(jsonFileData, collectionCustomJobsPath).Array()
-	if len(customJobs) == 0 {
-		return nil
-	}
-
-	for i := 0; i < len(customJobs); i++ {
-		customJobsData := customJobs[i].String()
-		url := gjson.Get(customJobsData, "URL").String()
-		selector := gjson.Get(customJobsData, "selector").String()
-		power := int8(gjson.Get(customJobsData, "power").Int())
-		weight := uint8(gjson.Get(customJobsData, "weight").Int())
-		job := ConvertCustomJobToStructJob(types.CustomJob{
-			URL:      url,
-			Power:    power,
-			Selector: selector,
-			Weight:   weight,
-		})
-		collectionCustomJobs = append(collectionCustomJobs, job)
+	customJobsJSONResult := gjson.Get(jsonFileData, collectionCustomJobsPath)
+	if customJobsJSONResult.Exists() {
+		customJobs := customJobsJSONResult.Array()
+		if len(customJobs) == 0 {
+			return nil
+		}
+		for i := 0; i < len(customJobs); i++ {
+			customJobsData := customJobs[i].String()
+			url := gjson.Get(customJobsData, "URL")
+			if url.Exists() {
+				customJob.URL = url.String()
+			}
+			selector := gjson.Get(customJobsData, "selector")
+			if selector.Exists() {
+				customJob.Selector = selector.String()
+			}
+			power := gjson.Get(customJobsData, "power")
+			if power.Exists() {
+				customJob.Power = int8(power.Int())
+			}
+			weight := gjson.Get(customJobsData, "weight")
+			if weight.Exists() {
+				customJob.Weight = uint8(weight.Int())
+			}
+			job := ConvertCustomJobToStructJob(customJob)
+			collectionCustomJobs = append(collectionCustomJobs, job)
+		}
 	}
 
 	return collectionCustomJobs
@@ -457,19 +470,34 @@ func (*UtilsStruct) HandleOfficialJobsFromJSONFile(client *ethclient.Client, col
 
 	for i := 0; i < len(jobIds); i++ {
 		officialJobsPath := "assets.collection." + collectionName + ".official jobs." + strconv.Itoa(int(jobIds[i]))
-		officialJobs := gjson.Get(dataString, officialJobsPath).String()
-		if officialJobs != "" {
-			job, err := UtilsInterface.GetActiveJob(client, jobIds[i])
-			if err != nil {
-				continue
+		officialJobsJSONResult := gjson.Get(dataString, officialJobsPath)
+		if officialJobsJSONResult.Exists() {
+			officialJobs := officialJobsJSONResult.String()
+			if officialJobs != "" {
+				job, err := UtilsInterface.GetActiveJob(client, jobIds[i])
+				if err != nil {
+					continue
+				}
+				log.Debugf("Overriding job %s having jobId %d from official job present in assets.json file...", job.Url, job.Id)
+				url := gjson.Get(officialJobs, "URL")
+				if url.Exists() {
+					job.Url = url.String()
+				}
+				selector := gjson.Get(officialJobs, "selector")
+				if selector.Exists() {
+					job.Selector = selector.String()
+				}
+				weight := gjson.Get(officialJobs, "weight")
+				if weight.Exists() {
+					job.Weight = uint8(weight.Int())
+				}
+				power := gjson.Get(officialJobs, "power")
+				if power.Exists() {
+					job.Power = int8(power.Int())
+				}
+				overrideJobs = append(overrideJobs, job)
+				overriddenJobIds = append(overriddenJobIds, jobIds[i])
 			}
-			job.Url = gjson.Get(officialJobs, "URL").String()
-			job.Selector = gjson.Get(officialJobs, "selector").String()
-			job.Weight = uint8(gjson.Get(officialJobs, "weight").Int())
-			job.Power = int8(gjson.Get(officialJobs, "power").Int())
-
-			overrideJobs = append(overrideJobs, job)
-			overriddenJobIds = append(overriddenJobIds, jobIds[i])
 		} else {
 			continue
 		}

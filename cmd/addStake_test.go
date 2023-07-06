@@ -5,19 +5,18 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"errors"
+	"math/big"
+	"razor/core"
+	"razor/core/types"
+	"razor/pkg/bindings"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	Types "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/mock"
-	"math/big"
-	"razor/cmd/mocks"
-	"razor/core"
-	"razor/core/types"
-	"razor/pkg/bindings"
-	utilsPkgMocks "razor/utils/mocks"
-	"testing"
 )
 
 func TestStakeCoins(t *testing.T) {
@@ -95,19 +94,11 @@ func TestStakeCoins(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			utilsMock := new(utilsPkgMocks.Utils)
-			stakeManagerUtilsMock := new(mocks.StakeManagerInterface)
-			transactionUtilsMock := new(mocks.TransactionInterface)
-
-			razorUtils = utilsMock
-			stakeManagerUtils = stakeManagerUtilsMock
-			transactionUtils = transactionUtilsMock
-
+			SetUpMockInterfaces()
 			utilsMock.On("GetEpoch", mock.AnythingOfType("*ethclient.Client")).Return(tt.args.epoch, tt.args.getEpochErr)
 			utilsMock.On("GetTxnOpts", mock.AnythingOfType("types.TransactionOptions")).Return(txnOpts)
-			transactionUtilsMock.On("Hash", mock.Anything).Return(tt.args.hash)
-			stakeManagerUtilsMock.On("Stake", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tt.args.stakeTxn, tt.args.stakeErr)
+			transactionMock.On("Hash", mock.Anything).Return(tt.args.hash)
+			stakeManagerMock.On("Stake", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tt.args.stakeTxn, tt.args.stakeErr)
 
 			utils := &UtilsStruct{}
 
@@ -311,6 +302,21 @@ func TestExecuteStake(t *testing.T) {
 			},
 			expectedFatal: true,
 		},
+		{
+			name: "Test 9: When stake value is less than minSafeRazor and staker's stake is more than the minSafeRazor already",
+			args: args{
+				config:       config,
+				password:     "test",
+				address:      "0x000000000000000000000000000000000000dead",
+				amount:       big.NewInt(20),
+				balance:      big.NewInt(10000),
+				minSafeRazor: big.NewInt(100),
+				stakerId:     1,
+				approveTxn:   common.BigToHash(big.NewInt(1)),
+				stakeTxn:     common.BigToHash(big.NewInt(2)),
+			},
+			expectedFatal: false,
+		},
 	}
 
 	defer func() { log.ExitFunc = nil }()
@@ -319,18 +325,13 @@ func TestExecuteStake(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			utilsMock := new(utilsPkgMocks.Utils)
-			flagSetUtilsMock := new(mocks.FlagSetInterface)
-			cmdUtilsMock := new(mocks.UtilsCmdInterface)
+			SetUpMockInterfaces()
 
-			razorUtils = utilsMock
-			flagSetUtils = flagSetUtilsMock
-			cmdUtils = cmdUtilsMock
-
-			utilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
+			fileUtilsMock.On("AssignLogFile", mock.AnythingOfType("*pflag.FlagSet"), mock.Anything)
 			cmdUtilsMock.On("GetConfigData").Return(tt.args.config, tt.args.configErr)
 			utilsMock.On("AssignPassword", mock.AnythingOfType("*pflag.FlagSet")).Return(tt.args.password)
-			flagSetUtilsMock.On("GetStringAddress", mock.AnythingOfType("*pflag.FlagSet")).Return(tt.args.address, tt.args.addressErr)
+			utilsMock.On("CheckPassword", mock.Anything, mock.Anything).Return(nil)
+			flagSetMock.On("GetStringAddress", mock.AnythingOfType("*pflag.FlagSet")).Return(tt.args.address, tt.args.addressErr)
 			utilsMock.On("ConnectToClient", mock.AnythingOfType("string")).Return(client)
 			utilsMock.On("WaitForBlockCompletion", mock.AnythingOfType("*ethclient.Client"), mock.AnythingOfType("string")).Return(nil)
 			utilsMock.On("FetchBalance", mock.AnythingOfType("*ethclient.Client"), mock.AnythingOfType("string")).Return(tt.args.balance, tt.args.balanceErr)

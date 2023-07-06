@@ -10,6 +10,8 @@ import (
 	"math/big"
 	"os"
 	"razor/accounts"
+	"razor/client"
+	"razor/core"
 	coretypes "razor/core/types"
 	"razor/path"
 	"razor/pkg/bindings"
@@ -27,6 +29,7 @@ import (
 )
 
 var RPCTimeout int64
+var HTTPTimeout int64
 
 func StartRazor(optionsPackageStruct OptionsPackageStruct) Utils {
 	UtilsInterface = optionsPackageStruct.UtilsInterface
@@ -50,6 +53,8 @@ func StartRazor(optionsPackageStruct OptionsPackageStruct) Utils {
 	RetryInterface = optionsPackageStruct.RetryInterface
 	MerkleInterface = optionsPackageStruct.MerkleInterface
 	FlagSetInterface = optionsPackageStruct.FlagSetInterface
+	FileInterface = optionsPackageStruct.FileInterface
+	GasInterface = optionsPackageStruct.GasInterface
 	return &UtilsStruct{}
 }
 
@@ -64,7 +69,7 @@ func InvokeFunctionWithTimeout(interfaceName interface{}, methodName string, arg
 		for i := range args {
 			inputs[i] = reflect.ValueOf(args[i])
 		}
-		log.Debug("Function: ", methodName)
+		log.Debug("Blockchain function: ", methodName)
 		functionCall = reflect.ValueOf(interfaceName).MethodByName(methodName).Call(inputs)
 		gotFunction <- true
 	}()
@@ -106,6 +111,42 @@ func CheckIfAnyError(result []reflect.Value) error {
 		return returnedError.(error)
 	}
 	return nil
+}
+
+func InvokeFunctionWithRetryAttempts(interfaceName interface{}, methodName string, args ...interface{}) ([]reflect.Value, error) {
+	var returnedValues []reflect.Value
+	var err error
+	inputs := make([]reflect.Value, len(args))
+	for i := range args {
+		inputs[i] = reflect.ValueOf(args[i])
+	}
+	alternateProvider := client.GetAlternateProvider()
+	switchToAlternateClient := client.GetSwitchToAlternateClientStatus()
+	if switchToAlternateClient && alternateProvider != "" {
+		// Changing client argument to alternate client
+		log.Debug("Making this RPC call using alternate RPC provider!")
+		inputs = client.ReplaceClientWithAlternateClient(inputs)
+	}
+	err = retry.Do(
+		func() error {
+			returnedValues = reflect.ValueOf(interfaceName).MethodByName(methodName).Call(inputs)
+			err = CheckIfAnyError(returnedValues)
+			if err != nil {
+				log.Debug("Function to retry: ", methodName)
+				log.Errorf("Error in %v....Retrying", methodName)
+				return err
+			}
+			return nil
+		}, RetryInterface.RetryAttempts(core.MaxRetries))
+	if err != nil {
+		if !switchToAlternateClient && alternateProvider != "" {
+			log.Errorf("%v error after retries: %v", methodName, err)
+			log.Info("Switching RPC to alternate RPC")
+			client.SetSwitchToAlternateClientStatus(true)
+			go client.StartTimerForAlternateClient(core.SwitchClientDuration)
+		}
+	}
+	return returnedValues, err
 }
 
 func (b BlockManagerStruct) GetBlockIndexToBeConfirmed(client *ethclient.Client) (int8, error) {
@@ -489,6 +530,16 @@ func (v VoteManagerStruct) GetEpochLastRevealed(client *ethclient.Client, staker
 	return returnedValues[0].Interface().(uint32), nil
 }
 
+func (s StakedTokenStruct) BalanceOf(client *ethclient.Client, tokenAddress common.Address, address common.Address) (*big.Int, error) {
+	stakedToken, opts := UtilsInterface.GetStakedTokenManagerWithOpts(client, tokenAddress)
+	returnedValues := InvokeFunctionWithTimeout(stakedToken, "BalanceOf", &opts, address)
+	returnedError := CheckIfAnyError(returnedValues)
+	if returnedError != nil {
+		return nil, returnedError
+	}
+	return returnedValues[0].Interface().(*big.Int), nil
+}
+
 func (b BindingsStruct) NewCollectionManager(address common.Address, client *ethclient.Client) (*bindings.CollectionManager, error) {
 	return bindings.NewCollectionManager(address, client)
 }
@@ -644,15 +695,6 @@ func (p PathStruct) GetJobFilePath() (string, error) {
 
 func (b BindStruct) NewKeyedTransactorWithChainID(key *ecdsa.PrivateKey, chainID *big.Int) (*bind.TransactOpts, error) {
 	return bind.NewKeyedTransactorWithChainID(key, chainID)
-}
-
-func (s StakedTokenStruct) BalanceOf(stakedToken *bindings.StakedToken, callOpts *bind.CallOpts, address common.Address) (*big.Int, error) {
-	returnedValues := InvokeFunctionWithTimeout(stakedToken, "BalanceOf", callOpts, address)
-	returnedError := CheckIfAnyError(returnedValues)
-	if returnedError != nil {
-		return nil, returnedError
-	}
-	return returnedValues[0].Interface().(*big.Int), nil
 }
 
 func (r RetryStruct) RetryAttempts(numberOfAttempts uint) retry.Option {

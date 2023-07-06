@@ -190,7 +190,7 @@ func TestAggregate(t *testing.T) {
 			ioMock.On("ReadAll", mock.Anything).Return(tt.args.fileData, tt.args.fileDataErr)
 			utilsMock.On("HandleOfficialJobsFromJSONFile", mock.Anything, mock.Anything, mock.Anything).Return(tt.args.overrrideJobs, tt.args.overrideJobIds)
 
-			got, err := utils.Aggregate(client, previousEpoch, tt.args.collection)
+			got, err := utils.Aggregate(client, previousEpoch, tt.args.collection, &cache.LocalCache{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Aggregate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1120,6 +1120,11 @@ func TestHandleOfficialJobsFromJSONFile(t *testing.T) {
 		AggregationMethod: 2, JobIDs: []uint16{1}, Name: "ethCollection",
 	}
 
+	ethCollection1 := bindings.StructsCollection{
+		Active: true, Id: 7, Power: 2,
+		AggregationMethod: 2, JobIDs: []uint16{1, 2, 3}, Name: "ethCollection",
+	}
+
 	type args struct {
 		collection bindings.StructsCollection
 		dataString string
@@ -1173,6 +1178,37 @@ func TestHandleOfficialJobsFromJSONFile(t *testing.T) {
 			},
 			want:               nil,
 			wantOverrideJobIds: nil,
+		},
+		{
+			name: "Test 4: When multiple jobIds are needed to be overridden from official jobs",
+			args: args{
+				collection: ethCollection1,
+				dataString: jsonDataString,
+				job: bindings.StructsJob{
+					Id:       1,
+					Url:      "http://kraken.com/eth1",
+					Selector: "data.ETH",
+					Power:    3,
+					Weight:   1,
+				},
+			},
+			want: []bindings.StructsJob{
+				{
+					Id:       1,
+					Url:      "http://kucoin.com/eth1",
+					Selector: "eth1",
+					Power:    2,
+					Weight:   2,
+				},
+				{
+					Id:       1,
+					Url:      "http://api.coinbase.com/eth2",
+					Selector: "eth2",
+					Power:    3,
+					Weight:   2,
+				},
+			},
+			wantOverrideJobIds: []uint16{1, 2},
 		},
 	}
 	for _, tt := range tests {
@@ -1288,9 +1324,9 @@ func TestGetAggregatedDataOfCollection(t *testing.T) {
 			utils := StartRazor(optionsPackageStruct)
 
 			utilsMock.On("GetActiveCollection", mock.Anything, mock.Anything).Return(tt.args.activeCollection, tt.args.activeCollectionErr)
-			utilsMock.On("Aggregate", mock.Anything, mock.Anything, mock.Anything).Return(tt.args.collectionData, tt.args.aggregationErr)
+			utilsMock.On("Aggregate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tt.args.collectionData, tt.args.aggregationErr)
 
-			got, err := utils.GetAggregatedDataOfCollection(client, collectionId, epoch)
+			got, err := utils.GetAggregatedDataOfCollection(client, collectionId, epoch, &cache.LocalCache{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAggregatedDataOfCollection() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -41,21 +41,12 @@ One of the quickest ways to get `razor-go` up and running on your machine is by 
 ```
 docker network create razor_network
 ```
-2. Create user 
-    ```
-      useradd -u 82 razor
-    ```
 
-3. Start razor-go container
+2. Start razor-go container
 
 ```
-docker run -d -it --entrypoint /bin/sh --network=razor_network --name razor-go -v "$(echo $HOME)"/.razor:/home/razor/.razor razornetwork/razor-go:v1.0.0-mainnet
+docker run -d -it --entrypoint /bin/sh --network=razor_network --name razor-go -v "$(echo $HOME)"/.razor:/root/.razor razornetwork/razor-go:v1.0.0-mainnet
 ```
-
-4. Update the owner of `.razor` directory
-    ```
-     chown razor:razor $HOME/.razor 
-    ```
 
 > **_NOTE:_** we are leveraging docker bind-mounts to mount `.razor` directory so that we have a shared mount of `.razor` directory between the host and the container. The `.razor` directory holds keys to the addresses that we use in `razor-go`, along with logs and config. We do this to persist data in the host machine, otherwise you would lose your keys once you delete the container.
 
@@ -102,31 +93,38 @@ Go to the `build/bin` directory where the razor binary is generated.
 There are a set of parameters that are configurable. These include:
 
 - Provider: The RPC URL of the provider you are using to connect to the blockchain.
+- Alternate Provider: This is the secondary RPC URL of the provider used to connect to the blockchain if the primary one is not working.
 - Gas Multiplier: The value with which the gas price will be multiplied while sending every transaction.
 - Buffer Size: Buffer size determines, out of all blocks in a state, in how many blocks the voting or any other operation can be performed.
 - Wait Time: This is the number of seconds the system will wait while voting.
 - Gas Price: The value of gas price if you want to set manually. If you don't provide any value or simply keep it to 1, the razor client will automatically calculate the optimum gas price and send it.
 - Log Level: Normally debug logs are not logged into the log file. But if you want you can set `logLevel` to `debug` and fetch the debug logs.
 - Gas Limit: The value with which the gas limit will be multiplied while sending every transaction.
+- Gas Limit Override: This value would be used as a gas limit for all the transactions instead of estimating for each transaction.
+- RPC Timeout: This is the threshold number of seconds after which any contract and client calls will time out.
+- HTTP Timeout: This is the threshold number of seconds after which an HTTP request for a job will time out.
+- Maximum size of log file: This is the maximum size of log file in MB
+- Maximum number of backups of log file: This is the maximum number of old log files to retain.
+- Maximum age of log file: This is the maximum number of days to retain old log files.
 
 The config is set while the build is generated, but if you need to change any of the above parameter, you can use the `setConfig` command.
 
 razor cli
 
 ```
-$ ./razor setConfig --provider <rpc_provider> --gasmultiplier <multiplier_value> --buffer <buffer_percentage> --wait <wait_for_n_blocks> --gasprice <gas_price> --logLevel <debug_or_info> --gasLimit <gas_limit_multiplier>
+$ ./razor setConfig --provider <rpc_provider> --gasmultiplier <multiplier_value> --buffer <buffer_percentage> --wait <wait_for_n_blocks> --gasprice <gas_price> --logLevel <debug_or_info> --gasLimit <gas_limit_multiplier> --rpcTimeout <rpc_timeout> --httpTimeout <http_timeout> --logFileMaxSize <file_max_size> --logFileMaxBackups <file_max_backups> --logFileMaxAge <file_max_age>
 ```
 
 docker
 
 ```
-docker exec -it razor-go razor setConfig --provider <rpc_provider> --gasmultiplier <multiplier_value> --buffer <buffer_percentage> --wait <wait_for_n_blocks> --gasprice <gas_price> --logLevel <debug_or_info> --gasLimit <gas_limit_multiplier>
+docker exec -it razor-go razor setConfig --provider <rpc_provider> --alternateProvider <alternate_rpc_provider> --gasmultiplier <multiplier_value> --buffer <buffer_percentage> --wait <wait_for_n_blocks> --gasprice <gas_price> --logLevel <debug_or_info> --gasLimit <gas_limit_multiplier> --rpcTimeout <rpc_timeout> --httpTimeout <http_timeout> --logFileMaxSize <file_max_size> --logFileMaxBackups <file_max_backups> --logFileMaxAge <file_max_age>
 ```
 
 Example:
 
 ```
-$ ./razor setConfig --provider https://mainnet.skalenodes.com/v1/turbulent-unique-scheat --gasmultiplier 1 --buffer 20 --wait 30 --gasprice 0 --logLevel debug --gasLimit 2
+$ ./razor setConfig --provider https://mainnet.skalenodes.com/v1/turbulent-unique-scheat --alternateProvider https://ce2m-skale.chainode.tech:10200/ --gasmultiplier 1 --buffer 20 --wait 30 --gasprice 0 --logLevel debug --gasLimit 2 --rpcTimeout 10 --httpTimeout 10 --logFileMaxSize 200 --logFileMaxBackups 52 --logFileMaxAge 365
 ```
 
 Other than setting these parameters in the config, you can use different values of these parameters in different command. Just add the same flag to any command you want to use and the new config changes will appear for that command.
@@ -167,7 +165,7 @@ Password:
 
 ### Import Account
 
-If you already have an account created, and have it's private key, that account can be imported into the `razor-go` client.
+If you already have an account created, and have its private key, that account can be imported into the `razor-go` client.
 To do that, you can use the `import` command. You'll be asked the private key first and then the password which you want to encrypt your keystore file with.
 
 razor cli
@@ -536,7 +534,7 @@ $ ./razor transfer --value 100 --to 0x91b1E6488307450f4c0442a1c35Bc314A505293e -
 
 ### Create Job
 
-Create new jobs using `creteJob` command.
+Create new jobs using `createJob` command.
 
 _Note: This command is restricted to "Admin Role"_
 
@@ -566,7 +564,7 @@ $  ./razor createJob --address 0x5a0b54d5dc17e0aadc383d2db43b0a0d3e029c4c -n btc
 
 ### Create Collection
 
-Create new collections using `creteCollection` command.
+Create new collections using `createCollection` command.
 
 _Note: This command is restricted to "Admin Role"_
 
@@ -590,7 +588,7 @@ $ ./razor createCollection --name btcCollectionMean --address 0x5a0b54d5dc17e0aa
 
 ### Modify Collection Status
 
-Modify the active status of an collection using the `modifyCollectionStatus` command.
+Modify the active status of a collection using the `modifyCollectionStatus` command.
 
 _Note: This command is restricted to "Admin Role"_
 
@@ -737,14 +735,14 @@ git clone https://github.com/razor-network/monitoring.git
 cd monitoring
 ```
 
-- If your staker is running via binary, then 
-    
+- If your staker is running via binary, then
+
     1. In `./configs/prometheus.yml`, replace `"razor-go:2112"` with `"<private/public address of host>:2112"`
 
 - For alerting you can add webhook in `./configs/alertmanager.yml`, replace `http://127.0.0.1:5001/` with your webhook URL. This will send you an alert in every 5min if metrics stops.
 
 - If you are running multiple stakers and want to monitor via single grafana dashboard
-    
+
     1. You need to update `./config/prometheus.yml`, add new target block where `job_name: "razor-go"`
         ```
         - targets: ["<second-host-address>:2112"]
@@ -753,22 +751,22 @@ cd monitoring
         ```
     2. Restart vmagent service `docker-compose restart vmagent`
 #### Start monitoring stack
--  You can spin all agents at once via 
-        
+-  You can spin all agents at once via
+
     ```
     docker-compose up -d
     ``` 
-    Can check the status of each service via
+   Can check the status of each service via
     ```
     docker-compose ps
     ```
 
-- You can open grafana at `<private/public address of host>:3000`, and get 
+- You can open grafana at `<private/public address of host>:3000`, and get
     1. Can checkout `Razor` dashboard to monitor your staker.
     2. Insight of host metrics at `Node Exporter Full` dashboard.
     3. Containers Insight at `Docker and OS metrics ( cadvisor, node_exporter )` dashboard.
     4. Can monitor alerts at `Alertmanager` dashboard.
-    
+
 >**_NOTE:_** Configure firewall for port `3000` on your host to access grafana.
 
 #### Troubleshoot Alerting
@@ -776,7 +774,7 @@ cd monitoring
 1. In `docker-compose.yml` uncomment ports for `alertmanager` and `vmalert`.
 2. Configure firewall to allow access to ports `8880` and `9093`.
 
-3. Check you get alerts on vmalert via `http://<host_address>:8880/vmalert/alerts`. vmalert is configured to scrap in every 2min. 
+3. Check you get alerts on vmalert via `http://<host_address>:8880/vmalert/alerts`. vmalert is configured to scrap in every 2min.
 
 4. If you see alert in vmalert then look into alertmanager `http://<host_address>:9093/#/alerts?`, if you see alerts in there but you didn't get one then probably you need to check your weebhook.
 
@@ -791,18 +789,18 @@ cd monitoring
 
 - If your staker is running via binary, then
 
-  1. In `./configs/prometheus.yml`, replace `"razor-go:2112"` with `"<private/public address of host>:2112"`
+    1. In `./configs/prometheus.yml`, replace `"razor-go:2112"` with `"<private/public address of host>:2112"`
 
 - For alerting you can add webhook in `./configs/alertmanager.yml`, replace `http://127.0.0.1:5001/` with your webhook URL. This will send you an alert in every 5min if metrics stops.
 
 - If you are running multiple stakers and want to monitor via single grafana dashboard
-  1. You need to update `./config/prometheus.yml`, add new target block where `job_name: "razor-go"`
-     ```
-     - targets: ["<second-host-address>:2112"]
-       labels:
-         staker: "<staker-name>"
-     ```
-  2. Restart vmagent service `docker-compose restart vmagent`
+    1. You need to update `./config/prometheus.yml`, add new target block where `job_name: "razor-go"`
+       ```
+       - targets: ["<second-host-address>:2112"]
+         labels:
+           staker: "<staker-name>"
+       ```
+    2. Restart vmagent service `docker-compose restart vmagent`
 
 #### Start monitoring stack
 
@@ -819,10 +817,10 @@ cd monitoring
   ```
 
 - You can open grafana at `<private/public address of host>:3000`, and get
-  1. Can checkout `Razor` dashboard to monitor your staker.
-  2. Insight of host metrics at `Node Exporter Full` dashboard.
-  3. Containers Insight at `Docker and OS metrics ( cadvisor, node_exporter )` dashboard.
-  4. Can monitor alerts at `Alertmanager` dashboard.
+    1. Can checkout `Razor` dashboard to monitor your staker.
+    2. Insight of host metrics at `Node Exporter Full` dashboard.
+    3. Containers Insight at `Docker and OS metrics ( cadvisor, node_exporter )` dashboard.
+    4. Can monitor alerts at `Alertmanager` dashboard.
 
 > **_NOTE:_** Configure firewall for port `3000` on your host to access grafana.
 
@@ -842,7 +840,7 @@ You can override the existing job and also add your custom jobs by adding `asset
 
 Shown below is an example of how your `assets.json` file should be -
 
-```
+``` json
 {
 	"assets": {
 		"collection": {
@@ -1013,7 +1011,7 @@ $ ./razor contractAddresses
 
 9. To Start **Voting**,
 
-   1. Provide password through **CLI**
+    1. Provide password through **CLI**
 
    ```bash
    # Run process in foreground and provide password through cli
