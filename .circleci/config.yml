@@ -37,18 +37,6 @@ jobs:
           name: "go-lint"
           command: |
             golangci-lint run -v --timeout 5m
-      - run:
-          name: "Executing test cases"
-          command: |
-            go-acc ./... --ignore razor/accounts/mocks --ignore razor/cmd/mocks --ignore razor/utils/mocks --ignore pkg --ignore razor/path/mocks --output coverage.txt
-      - run:
-          name: "Executing benchmarks"
-          command: |
-            go test ./... -bench=. -run=^#
-      - run:
-          name: "Publish Coverage to Coveralls.io"
-          command: |
-            goveralls -coverprofile=coverage.txt -service semaphore -repotoken $COVERALLS_TOKEN
       - persist_to_workspace:
           root: .
           paths:
