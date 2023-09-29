@@ -151,7 +151,7 @@ jobs:
 
   publish-github-release:
     docker:
-      - image: cimg/go:1.17
+      - image: cimg/go:1.21.1
     steps:
       - checkout
       - attach_workspace:
@@ -162,6 +162,7 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             go get -u github.com/tcnksm/ghr
+            export PATH=$PATH:$(go env GOPATH)/bin
             VERSION=$(git describe --tags --abbrev=0)
             mv razor_go.linux-amd64.tar.gz razor_go.${VERSION}.linux-amd64.tar.gz && mv razor_go.linux-arm64.tar.gz razor_go.${VERSION}.linux-arm64.tar.gz
             echo "Pushing artifacts echo  razor_go.${VERSION}.linux-amd64.tar.gz and razor_go.${VERSION}.linux-arm64.tar.gz"
