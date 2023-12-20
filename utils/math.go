@@ -29,7 +29,7 @@ func ConvertToNumber(num interface{}, returnType string) (*big.Float, error) {
 			return ConvertHexToBigFloat(v)
 		}
 		if isHexArrayPattern(returnType) {
-			return handleHexArray(v, returnType)
+			return HandleHexArray(v, returnType)
 		}
 		convertedNumber, err := strconv.ParseFloat(v, 64)
 		if err != nil {
@@ -198,20 +198,20 @@ func Shuffle(slice []uint32) []uint32 {
 	return copiedSlice
 }
 
-func handleHexArray(hexStr string, returnType string) (*big.Float, error) {
+func HandleHexArray(hexStr string, returnType string) (*big.Float, error) {
 	decodedHexArray, err := decodeHexString(hexStr)
 	if err != nil {
 		log.Error("Error in decoding hex array: ", err)
 		return big.NewFloat(0), err
 	}
-	log.Info("handleHexArray: decoded hex array: ", decodedHexArray)
+	log.Info("HandleHexArray: decoded hex array: ", decodedHexArray)
 
 	index, err := extractIndex(returnType)
 	if err != nil {
 		log.Error("Error in extracting value from decoded hex array: ", err)
 		return big.NewFloat(0), err
 	}
-	log.Debug("handleHexArray: extracted index: ", index)
+	log.Debug("HandleHexArray: extracted index: ", index)
 
 	// Check if index is within the bounds of decodedHexArray
 	if index < 0 || index >= len(decodedHexArray) {
