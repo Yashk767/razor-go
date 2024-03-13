@@ -8,6 +8,7 @@ import (
 	mathRand "math/rand"
 	"razor/core"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -58,6 +59,7 @@ func MultiplyWithPower(num *big.Float, power int8) *big.Int {
 	value := big.NewFloat(1).Mul(num, decimalMultiplier)
 	result := new(big.Int)
 	value.Int(result)
+	log.Info("AAAA Num of go routine 214: ", runtime.NumGoroutine())
 	return result
 }
 

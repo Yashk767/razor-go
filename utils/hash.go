@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
+	"runtime"
 )
 
 func EcRecover(data, sig hexutil.Bytes) (common.Address, error) {
@@ -18,11 +19,14 @@ func EcRecover(data, sig hexutil.Bytes) (common.Address, error) {
 	if err != nil {
 		return common.Address{}, err
 	}
+	log.Info("AAAA Commit Num of go routines 407: ", runtime.NumGoroutine())
 	return crypto.PubkeyToAddress(*rpk), nil
 }
 
 func SignHash(data []byte) []byte {
+	log.Info("AAAA Commit Num of go routines 401: ", runtime.NumGoroutine())
 	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
+	log.Info("AAAA Commit Num of go routines 402: ", runtime.NumGoroutine())
 	return crypto.Keccak256([]byte(msg))
 }
 

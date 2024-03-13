@@ -10,6 +10,7 @@ import (
 	"razor/core/types"
 	"razor/pkg/bindings"
 	"razor/utils"
+	"runtime"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -56,6 +57,7 @@ HandleCommitState fetches the collections assigned to the staker and creates the
 Values for only the collections assigned to the staker is fetched for others, 0 is added to the leaves of tree.
 */
 func (*UtilsStruct) HandleCommitState(client *ethclient.Client, epoch uint32, seed []byte, rogueData types.Rogue) (types.CommitData, error) {
+	log.Infof("AAAA Commit Num of goroutines 21: ", runtime.NumGoroutine())
 	numActiveCollections, err := razorUtils.GetNumActiveCollections(client)
 	if err != nil {
 		return types.CommitData{}, err
@@ -66,25 +68,31 @@ func (*UtilsStruct) HandleCommitState(client *ethclient.Client, epoch uint32, se
 	if err != nil {
 		return types.CommitData{}, err
 	}
+	log.Infof("AAAA Commit Num of goroutines 22: ", runtime.NumGoroutine())
 
 	var leavesOfTree []*big.Int
 
+	//Increased by 1
 	log.Debug("Creating a local cache which will store API result and expire at the end of commit state")
 	localCache := cache.NewLocalCache(time.Second * time.Duration(core.StateLength))
 
+	log.Infof("AAAA Commit Num of goroutines 23: ", runtime.NumGoroutine())
 	log.Debug("Iterating over all the collections...")
 	for i := 0; i < int(numActiveCollections); i++ {
 		log.Debug("HandleCommitState: Iterating index: ", i)
 		log.Debug("HandleCommitState: Is the collection assigned: ", assignedCollections[i])
 		if assignedCollections[i] {
+			log.Infof("AAAA Commit Num of goroutines 24 i=%v: %v", i, runtime.NumGoroutine())
 			collectionId, err := razorUtils.GetCollectionIdFromIndex(client, uint16(i))
 			if err != nil {
 				return types.CommitData{}, err
 			}
+			log.Infof("AAAA Commit Num of goroutines 25 i =%v: %v", i, runtime.NumGoroutine())
 			collectionData, err := razorUtils.GetAggregatedDataOfCollection(client, collectionId, epoch, localCache)
 			if err != nil {
 				return types.CommitData{}, err
 			}
+			log.Infof("AAAA Commit Num of goroutines 26 i =%v: %v", i, runtime.NumGoroutine())
 			if rogueData.IsRogue && utils.Contains(rogueData.RogueMode, "commit") {
 				log.Warn("YOU ARE COMMITTING VALUES IN ROGUE MODE, THIS CAN INCUR PENALTIES!")
 				collectionData = razorUtils.GetRogueRandomValue(100000)

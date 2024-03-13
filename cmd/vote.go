@@ -10,11 +10,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"razor/accounts"
+	clientPkg "razor/client"
 	"razor/core"
 	"razor/core/types"
 	"razor/logger"
 	"razor/pkg/bindings"
 	"razor/utils"
+	"runtime"
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -88,6 +90,8 @@ func (*UtilsStruct) ExecuteVote(flagSet *pflag.FlagSet) {
 
 	account := types.Account{Address: address, Password: password}
 
+	clientPkg.InitHttpClient(config.HTTPTimeout)
+
 	cmdUtils.HandleExit()
 	log.Debugf("Calling Vote() with arguments rogueData = %+v, account address = %s, backup node actions to ignore = %s", rogueData, account.Address, backupNodeActionsToIgnore)
 	if err := cmdUtils.Vote(context.Background(), config, client, rogueData, account, backupNodeActionsToIgnore); err != nil {
@@ -129,6 +133,7 @@ func (*UtilsStruct) Vote(ctx context.Context, config types.Configurations, clien
 		case <-ctx.Done():
 			return nil
 		default:
+			log.Info("BBBB BEFORE Num of Go routines: ", runtime.NumGoroutine())
 			log.Debugf("Vote: Header value: %d", header.Number)
 			latestHeader, err := clientUtils.GetLatestBlockWithRetry(client)
 			if err != nil {
@@ -141,6 +146,7 @@ func (*UtilsStruct) Vote(ctx context.Context, config types.Configurations, clien
 				cmdUtils.HandleBlock(client, account, latestHeader.Number, config, rogueData, backupNodeActionsToIgnore)
 			}
 			time.Sleep(time.Second * time.Duration(core.BlockNumberInterval))
+			log.Info("BBBB AFTER Num of Go routines: ", runtime.NumGoroutine())
 		}
 	}
 }
@@ -350,10 +356,13 @@ func (*UtilsStruct) InitiateCommit(client *ethclient.Client, config types.Config
 	keystorePath := filepath.Join(razorPath, "keystore_files")
 	log.Debugf("InitiateCommit: Keystore file path: %s", keystorePath)
 	log.Debugf("InitiateCommit: Calling CalculateSeed() with arguments keystorePath = %s, epoch = %d", keystorePath, epoch)
+	log.Info("AAAA Commit Num of go routines 1: ", runtime.NumGoroutine())
+	//Increased by 2
 	seed, err := CalculateSeed(client, account, keystorePath, epoch)
 	if err != nil {
 		return errors.New("Error in getting seed: " + err.Error())
 	}
+	log.Info("AAAA Commit Num of go routines 2: ", runtime.NumGoroutine())
 
 	log.Debugf("InitiateCommit: Calling HandleCommitState with arguments epoch = %d, seed = %v, rogueData = %+v", epoch, seed, rogueData)
 	commitData, err := cmdUtils.HandleCommitState(client, epoch, seed, rogueData)
@@ -361,6 +370,8 @@ func (*UtilsStruct) InitiateCommit(client *ethclient.Client, config types.Config
 		return errors.New("Error in getting active assets: " + err.Error())
 	}
 	log.Debug("InitiateCommit: Commit Data: ", commitData)
+
+	log.Info("AAAA Commit Num of go routines 3: ", runtime.NumGoroutine())
 
 	commitTxn, err := cmdUtils.Commit(client, config, account, epoch, seed, commitData.Leaves)
 	if err != nil {
@@ -570,21 +581,27 @@ func (*UtilsStruct) CalculateSecret(account types.Account, epoch uint32, keystor
 	if chainId == nil {
 		return nil, nil, errors.New("chainId is nil")
 	}
+	log.Info("AAAA Commit Num of go routines 400: ", runtime.NumGoroutine())
 	hash := solsha3.SoliditySHA3([]string{"address", "uint32", "uint256", "string"}, []interface{}{common.HexToAddress(account.Address), epoch, chainId, "razororacle"})
+	log.Info("AAAA Commit Num of go routines 401: ", runtime.NumGoroutine())
 	log.Debug("CalculateSecret: Hash: ", hash)
 	ethHash := utils.SignHash(hash)
+	log.Info("AAAA Commit Num of go routines 403: ", runtime.NumGoroutine())
+
 	log.Debug("Hash generated for secret")
 	log.Debug("CalculateSecret: Ethereum signed hash: ", ethHash)
 	signedData, err := accounts.AccountUtilsInterface.SignData(ethHash, account, keystorePath)
 	if err != nil {
 		return nil, nil, errors.New("Error in signing the data: " + err.Error())
 	}
+	log.Info("AAAA Commit Num of go routines 406: ", runtime.NumGoroutine())
 	log.Debug("CalculateSecret: SignedData: ", signedData)
 	log.Debugf("Checking whether recovered address from Hash: %v and Signed data: %v is same as given address...", hash, signedData)
 	recoveredAddress, err := utils.EcRecover(hash, signedData)
 	if err != nil {
 		return nil, nil, errors.New("Error in verifying: " + err.Error())
 	}
+	log.Info("AAAA Commit Num of go routines 408: ", runtime.NumGoroutine())
 	log.Debug("CalculateSecret: Recovered Address: ", recoveredAddress)
 	if recoveredAddress != common.HexToAddress(account.Address) {
 		return nil, nil, errors.New("invalid verification")
@@ -595,6 +612,7 @@ func (*UtilsStruct) CalculateSecret(account types.Account, epoch uint32, keystor
 	}
 
 	secret := crypto.Keccak256(signedData)
+	log.Info("AAAA Commit Num of go routines 409: ", runtime.NumGoroutine())
 	log.Debug("Secret generated.")
 	return signedData, secret, nil
 }

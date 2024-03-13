@@ -12,6 +12,7 @@ import (
 	"razor/path"
 	"razor/pkg/bindings"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -141,16 +142,19 @@ func (*UtilsStruct) GetActiveCollectionIds(client *ethclient.Client) ([]uint16, 
 }
 
 func (*UtilsStruct) GetAggregatedDataOfCollection(client *ethclient.Client, collectionId uint16, epoch uint32, localCache *cache.LocalCache) (*big.Int, error) {
+	//increased by 2
 	activeCollection, err := UtilsInterface.GetActiveCollection(client, collectionId)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
+	log.Infof("AAAA Commit Num of goroutines 90 collectionId =%v: %v", collectionId, runtime.NumGoroutine())
 	//Supply previous epoch to Aggregate in case if last reported value is required.
 	collectionData, aggregationError := UtilsInterface.Aggregate(client, epoch-1, activeCollection, localCache)
 	if aggregationError != nil {
 		return nil, aggregationError
 	}
+	log.Infof("AAAA Commit Num of goroutines 100 collectionId =%v: %v", collectionId, runtime.NumGoroutine())
 	return collectionData, nil
 }
 
@@ -158,11 +162,13 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 	var jobs []bindings.StructsJob
 	var overriddenJobIds []uint16
 
+	log.Infof("AAAA Commit Num of goroutines 91 collectionId = %v: %v", collection.Id, runtime.NumGoroutine())
 	// Checks if assets.JSON file exists
 	assetsFilePath, err := path.PathUtilsInterface.GetJobFilePath()
 	if err != nil {
 		return nil, err
 	}
+	log.Infof("AAAA Commit Num of goroutines 92 collectionId = %v: %v", collection.Id, runtime.NumGoroutine())
 	if _, err := path.OSUtilsInterface.Stat(assetsFilePath); !errors.Is(err, os.ErrNotExist) {
 		log.Debug("Fetching the jobs from assets.json file...")
 		jsonFile, err := path.OSUtilsInterface.Open(assetsFilePath)
@@ -194,6 +200,7 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 		}
 		jobs = append(jobs, customJobs...)
 	}
+	log.Infof("AAAA Commit Num of goroutines 93 collectionId = %v: %v", collection.Id, runtime.NumGoroutine())
 
 	for _, id := range collection.JobIDs {
 
@@ -208,9 +215,12 @@ func (*UtilsStruct) Aggregate(client *ethclient.Client, previousEpoch uint32, co
 		}
 	}
 
+	log.Infof("AAAA Commit Num of goroutines 94 collectionId = %v: %v", collection.Id, runtime.NumGoroutine())
+
 	if len(jobs) == 0 {
 		return nil, errors.New("no jobs present in the collection")
 	}
+	//increased by 3
 	dataToCommit, weight, err := UtilsInterface.GetDataToCommitFromJobs(jobs, localCache)
 	if err != nil || len(dataToCommit) == 0 {
 		prevCommitmentData, err := UtilsInterface.FetchPreviousValue(client, previousEpoch, collection.Id)

@@ -8,6 +8,7 @@ import (
 	"razor/core/types"
 	"razor/logger"
 	"razor/path"
+	"runtime"
 	"strings"
 )
 
@@ -46,6 +47,7 @@ func (AccountUtils) GetPrivateKeyFromKeystore(keystorePath string, password stri
 //This function takes address of account, password and keystore path as input and returns private key of account
 func (AccountUtils) GetPrivateKey(address string, password string, keystorePath string) (*ecdsa.PrivateKey, error) {
 	allAccounts := AccountUtilsInterface.Accounts(keystorePath)
+	log.Info("AAAA Commit Num of go routines 404: ", runtime.NumGoroutine())
 	for _, account := range allAccounts {
 		if strings.EqualFold(account.Address.Hex(), address) {
 			return AccountUtilsInterface.GetPrivateKeyFromKeystore(account.URL.Path, password)
@@ -60,5 +62,6 @@ func (AccountUtils) SignData(hash []byte, account types.Account, defaultPath str
 	if err != nil {
 		return nil, err
 	}
+	log.Info("AAAA Commit Num of go routines 405: ", runtime.NumGoroutine())
 	return AccountUtilsInterface.Sign(hash, privateKey)
 }
