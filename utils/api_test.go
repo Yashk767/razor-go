@@ -139,7 +139,7 @@ func TestGetDataFromAPI(t *testing.T) {
 			args: args{
 				urlStruct: types.DataSourceURL{
 					Type: "POST",
-					URL:  "https://rpc.ankr.com/polygon_mumbai",
+					URL:  "https://sepolia.optimism.io",
 					Body: map[string]interface{}{"fail": func() {}, "jsonrpc": 1},
 				},
 			},
