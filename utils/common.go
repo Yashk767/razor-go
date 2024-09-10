@@ -129,8 +129,8 @@ func (*UtilsStruct) IsFlagPassed(name string) bool {
 	return found
 }
 
-func (*UtilsStruct) CheckEthBalanceIsZero(client *ethclient.Client, address string) {
-	ethBalance, err := ClientInterface.BalanceAtWithRetry(client, common.HexToAddress(address))
+func (*UtilsStruct) CheckEthBalanceIsZero(ctx context.Context, client *ethclient.Client, address string) {
+	ethBalance, err := ClientInterface.BalanceAtWithRetry(ctx, client, common.HexToAddress(address))
 	if err != nil {
 		log.Fatalf("Error in fetching sFuel balance of the account: %s\n%s", address, err)
 	}
@@ -158,15 +158,15 @@ func GetStateName(stateNumber int64) string {
 	return stateName
 }
 
-func (*UtilsStruct) AssignStakerId(flagSet *pflag.FlagSet, client *ethclient.Client, address string) (uint32, error) {
+func (*UtilsStruct) AssignStakerId(ctx context.Context, flagSet *pflag.FlagSet, client *ethclient.Client, address string) (uint32, error) {
 	if UtilsInterface.IsFlagPassed("stakerId") {
 		return UtilsInterface.GetUint32(flagSet, "stakerId")
 	}
-	return UtilsInterface.GetStakerId(client, address)
+	return UtilsInterface.GetStakerId(ctx, client, address)
 }
 
-func (*UtilsStruct) GetEpoch(client *ethclient.Client) (uint32, error) {
-	latestHeader, err := ClientInterface.GetLatestBlockWithRetry(client)
+func (*UtilsStruct) GetEpoch(ctx context.Context, client *ethclient.Client) (uint32, error) {
+	latestHeader, err := ClientInterface.GetLatestBlockWithRetry(ctx, client)
 	if err != nil {
 		log.Error("Error in fetching block: ", err)
 		return 0, err
@@ -175,8 +175,8 @@ func (*UtilsStruct) GetEpoch(client *ethclient.Client) (uint32, error) {
 	return uint32(epoch), nil
 }
 
-func (*UtilsStruct) CalculateBlockTime(client *ethclient.Client) int64 {
-	latestBlock, err := ClientInterface.GetLatestBlockWithRetry(client)
+func (*UtilsStruct) CalculateBlockTime(ctx context.Context, client *ethclient.Client) int64 {
+	latestBlock, err := ClientInterface.GetLatestBlockWithRetry(ctx, client)
 	if err != nil {
 		log.Fatalf("Error in fetching latest Block: %s", err)
 	}
@@ -188,11 +188,7 @@ func (*UtilsStruct) CalculateBlockTime(client *ethclient.Client) int64 {
 	return int64(latestBlock.Time - lastSecondBlock.Time)
 }
 
-func (*UtilsStruct) GetRemainingTimeOfCurrentState(client *ethclient.Client, stateBuffer uint64, bufferPercent int32) (int64, error) {
-	block, err := ClientInterface.GetLatestBlockWithRetry(client)
-	if err != nil {
-		return 0, err
-	}
+func (*UtilsStruct) GetRemainingTimeOfCurrentState(block *Types.Header, stateBuffer uint64, bufferPercent int32) (int64, error) {
 	timeRemaining := core.StateLength - (block.Time % core.StateLength)
 	upperLimit := ((core.StateLength * uint64(bufferPercent)) / 100) + stateBuffer
 
