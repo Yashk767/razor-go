@@ -38,6 +38,10 @@ jobs:
           sudo apt-get install -y npm ethereum
 
           npm install
+          
+          go env -w GOPROXY=direct
+          
+          go clean -modcache
 
           go get -d github.com/ethereum/go-ethereum@1.14.11 \
 
