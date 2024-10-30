@@ -32,17 +32,13 @@ jobs:
       - name: Install Dependencies-test12
         run: >
           sudo add-apt-repository -y ppa:ethereum/ethereum
-
           sudo apt-get update
-
           sudo apt-get install -y npm ethereum
-
           npm install
           
           go env -w GOPROXY=https://proxy.golang.org,direct
-          
           go clean -modcache
-
+          
           go get github.com/ethereum/go-ethereum@v1.14.11
           go install github.com/ethereum/go-ethereum/cmd/abigen@v1.14.11
           go install github.com/mattn/goveralls@v0.0.11
