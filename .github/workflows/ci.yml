@@ -39,6 +39,10 @@ jobs:
 
           npm install
 
+          go env -w GOPROXY=https://proxy.golang.org,direct \
+          
+          go clean -modcache \
+          
           go get github.com/ethereum/go-ethereum@1.14.11 \
 
           && go install github.com/ethereum/go-ethereum/cmd/abigen@1.14.11 \
