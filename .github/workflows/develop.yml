@@ -38,14 +38,16 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      
+
       - name: Install Dependencies
         run: |
           sudo add-apt-repository -y ppa:ethereum/ethereum
           sudo apt-get update
           sudo apt-get install -y npm ethereum
           npm install
-          go get -d github.com/ethereum/go-ethereum@v1.14.11
+          go env -w GOPROXY=https://proxy.golang.org,direct
+          go clean -modcache
+          go get github.com/ethereum/go-ethereum@v1.14.11
           go install github.com/ethereum/go-ethereum/cmd/abigen@v1.14.11
           go install github.com/mattn/goveralls@v0.0.11
           go install github.com/ory/go-acc@v0.2.7
