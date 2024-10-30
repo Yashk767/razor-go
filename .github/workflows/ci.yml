@@ -43,7 +43,7 @@ jobs:
           
           go clean -modcache
 
-          go install github.com/ethereum/go-ethereum/cmd/abigen@v1.14.11 \
+           go get github.com/ethereum/go-ethereum@v1.14.11 \
 
           && go install github.com/ethereum/go-ethereum/cmd/abigen@1.14.11 \
 
