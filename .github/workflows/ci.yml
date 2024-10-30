@@ -39,9 +39,9 @@ jobs:
 
           npm install
 
-          go env -w GOPROXY=https://proxy.golang.org,direct \
+          go env -w GOPROXY=https://proxy.golang.org,direct
           
-          go clean -modcache \
+          go clean -modcache
           
           go get github.com/ethereum/go-ethereum@1.14.11 \
 
