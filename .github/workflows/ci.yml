@@ -29,29 +29,21 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.23
-      - name: Install Dependencies
-        run: >
+        run: |
           sudo add-apt-repository -y ppa:ethereum/ethereum
-
           sudo apt-get update
-
           sudo apt-get install -y npm ethereum
-
           npm install
-
+          
           go env -w GOPROXY=https://proxy.golang.org,direct
           
           go clean -modcache
           
-          go get github.com/ethereum/go-ethereum@1.14.11 \
-
-          && go install github.com/ethereum/go-ethereum/cmd/abigen@1.14.11 \
-
-          && go install github.com/mattn/goveralls@v0.0.11 \
-
-          && go install github.com/ory/go-acc@v0.2.7 \
-
-          && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+          go install github.com/ethereum/go-ethereum@v1.14.11
+          go install github.com/ethereum/go-ethereum/cmd/abigen@v1.14.11
+          go install github.com/mattn/goveralls@v0.0.11
+          go install github.com/ory/go-acc@v0.2.7
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
       - name: Run make setup for mainnet
         run: make setup
       - name: Run gofmt
