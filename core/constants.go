@@ -116,7 +116,6 @@ const (
 
 const GetStakeSnapshotMethod = "getStakeSnapshot"
 
-// Following are the event names that nodes will listen to in order to update the jobs/collections in the cache
 const (
 	JobCreatedEvent               = "JobCreated"
 	CollectionCreatedEvent        = "CollectionCreated"
