@@ -14,7 +14,6 @@ const (
 	StateLength           = EpochLength / NumberOfStates
 )
 
-// ChainId corresponds to the EUROPA chain
 var ChainId = big.NewInt(0x79f99296)
 
 const (
