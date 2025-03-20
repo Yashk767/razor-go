@@ -108,7 +108,6 @@ const (
 	MaxIterations = 10000000
 )
 
-// Following are the constants used in custom http.Transport configuration for the common HTTP client that we use for all the requests
 const (
 	HTTPClientMaxIdleConns        = 15
 	HTTPClientMaxIdleConnsPerHost = 5
@@ -116,7 +115,6 @@ const (
 
 const GetStakeSnapshotMethod = "getStakeSnapshot"
 
-// Following are the event names that nodes will listen to in order to update the jobs/collections in the cache
 const (
 	JobCreatedEvent               = "JobCreated"
 	CollectionCreatedEvent        = "CollectionCreated"
