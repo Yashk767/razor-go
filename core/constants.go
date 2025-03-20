@@ -108,7 +108,6 @@ const (
 	MaxIterations = 10000000
 )
 
-// Following are the constants used in custom http.Transport configuration for the common HTTP client that we use for all the requests
 const (
 	HTTPClientMaxIdleConns        = 15
 	HTTPClientMaxIdleConnsPerHost = 5
