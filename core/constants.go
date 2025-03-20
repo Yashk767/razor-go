@@ -14,7 +14,6 @@ const (
 	StateLength           = EpochLength / NumberOfStates
 )
 
-// ChainId corresponds to the EUROPA chain
 var ChainId = big.NewInt(0x79f99296)
 
 const (
@@ -30,7 +29,6 @@ const (
 	BlockCompletionTimeout           = 15
 )
 
-//Following are the default config values for all the config parameters
 const (
 	DefaultGasMultiplier    float32 = 1.0
 	DefaultBufferPercent    int32   = 5
